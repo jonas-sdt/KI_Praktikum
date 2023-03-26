@@ -13,7 +13,7 @@ class RobotState:
         self.angle = start_angle
         self.movement_area = None
         self.effector1_pos = None
-        self.effector2_position = None
+        self.effector2_pos = None
         self.load_image()
 
     def load_image(self):
@@ -49,6 +49,14 @@ class RobotState:
         self.position = (self.position[0] + action[0], self.position[1] + action[1])
         self.angle = (self.angle + action[2]) % 360
         self.update_area(self.position, self.angle)
+
+    def check_collision(self):
+        # Check if one of the effectors is on a wire
+        if self.movement_area[self.effector1_pos[0], self.effector1_pos[1]] == 1 or \
+                self.movement_area[self.effector2_pos[0], self.effector2_pos[1]] == 1:
+            return True
+        else:
+            return False
 
 
 class Action(Enum):
