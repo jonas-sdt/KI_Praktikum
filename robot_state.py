@@ -4,7 +4,7 @@ import numpy as np
 import math
 import os
 
-from constants import AGENT, EFFECTOR1, EFFECTOR2
+from constants import AGENT, ELECTRODE1, ELECTRODE2
 
 
 class RobotState:
@@ -12,10 +12,10 @@ class RobotState:
         self.position = start_position
         self.angle = start_angle
         self.movement_area = None
-        self.effector1_pos = None
-        self.effector2_pos = None
-        self.effector1_area = None
-        self.effector2_area = None
+        self.electrode1_pos = None
+        self.electrode2_pos = None
+        self.electrode1_area = None
+        self.electrode2_area = None
         self.load_image()
 
     def load_image(self):
@@ -36,37 +36,37 @@ class RobotState:
         # Add agent to starting position and angle
         self.movement_area[agent_pos[0], agent_pos[1]] = AGENT
 
-        # Add effectors to the array
-        effector_distance = 10  # distance from agent to effectors
-        effector_angle = math.radians(agent_angle)  # convert angle to radians
-        self.effector1_pos = (agent_pos[0] + int(effector_distance * math.cos(effector_angle + math.pi / 4)),
-                         agent_pos[1] + int(effector_distance * math.sin(effector_angle + math.pi / 4)))
-        self.effector2_pos = (agent_pos[0] + int(effector_distance * math.cos(effector_angle - math.pi / 4)),
-                         agent_pos[1] + int(effector_distance * math.sin(effector_angle - math.pi / 4)))
-        self.movement_area[self.effector1_pos[0], self.effector1_pos[1]] = EFFECTOR1  # example value for effector 1
-        self.movement_area[self.effector2_pos[0], self.effector2_pos[1]] = EFFECTOR2  # example value for effector 2
+        # Add electrodes to the array
+        electrode_distance = 10  # distance from agent to electrodes
+        electrode_angle = math.radians(agent_angle)  # convert angle to radians
+        self.electrode1_pos = (agent_pos[0] + int(electrode_distance * math.cos(electrode_angle + math.pi / 4)),
+                         agent_pos[1] + int(electrode_distance * math.sin(electrode_angle + math.pi / 4)))
+        self.electrode2_pos = (agent_pos[0] + int(electrode_distance * math.cos(electrode_angle - math.pi / 4)),
+                         agent_pos[1] + int(electrode_distance * math.sin(electrode_angle - math.pi / 4)))
+        self.movement_area[self.electrode1_pos[0], self.electrode1_pos[1]] = ELECTRODE1  # example value for electrode 1
+        self.movement_area[self.electrode2_pos[0], self.electrode2_pos[1]] = ELECTRODE2  # example value for electrode 2
 
     def do_action(self, action):
         # action is a tuple of (x, y, angle)
         self.position = (self.position[0] + action[0], self.position[1] + action[1])
         self.angle = (self.angle + action[2]) % 360
         self.update_area(self.position, self.angle)
-        self.update_effector_area()
+        self.update_electrode_area()
 
     def check_collision(self):
-        # Check if one of the effectors is on a wire
-        if self.movement_area[self.effector1_pos[0], self.effector1_pos[1]] == 1 or \
-                self.movement_area[self.effector2_pos[0], self.effector2_pos[1]] == 1:
+        # Check if one of the electrodes is on a wire
+        if self.movement_area[self.electrode1_pos[0], self.electrode1_pos[1]] == 1 or \
+                self.movement_area[self.electrode2_pos[0], self.electrode2_pos[1]] == 1:
             return True
         else:
             return False
 
-    def update_effector_area(self):
-        # Check if there is wire in a 5x5 area around the effectors
-        self.effector1_area = self.movement_area[self.effector1_pos[0] - 2:self.effector1_pos[0] + 3,
-                                            self.effector1_pos[1] - 2:self.effector1_pos[1] + 3]
-        self.effector2_area = self.movement_area[self.effector2_pos[0] - 2:self.effector2_pos[0] + 3,
-                                            self.effector2_pos[1] - 2:self.effector2_pos[1] + 3]
+    def update_electrode_area(self):
+        # Check if there is wire in a 5x5 area around the electrodes
+        self.electrode1_area = self.movement_area[self.electrode1_pos[0] - 2:self.electrode1_pos[0] + 3,
+                                            self.electrode1_pos[1] - 2:self.electrode1_pos[1] + 3]
+        self.electrode2_area = self.movement_area[self.electrode2_pos[0] - 2:self.electrode2_pos[0] + 3,
+                                            self.electrode2_pos[1] - 2:self.electrode2_pos[1] + 3]
 
 
 
