@@ -40,9 +40,9 @@ class RobotState:
         electrode_distance = 10  # distance from agent to electrodes
         electrode_angle = math.radians(agent_angle)  # convert angle to radians
         self.electrode1_pos = (agent_pos[0] + int(electrode_distance * math.cos(electrode_angle + math.pi / 4)),
-                         agent_pos[1] + int(electrode_distance * math.sin(electrode_angle + math.pi / 4)))
+                               agent_pos[1] + int(electrode_distance * math.sin(electrode_angle + math.pi / 4)))
         self.electrode2_pos = (agent_pos[0] + int(electrode_distance * math.cos(electrode_angle - math.pi / 4)),
-                         agent_pos[1] + int(electrode_distance * math.sin(electrode_angle - math.pi / 4)))
+                               agent_pos[1] + int(electrode_distance * math.sin(electrode_angle - math.pi / 4)))
         self.movement_area[self.electrode1_pos[0], self.electrode1_pos[1]] = ELECTRODE1  # example value for electrode 1
         self.movement_area[self.electrode2_pos[0], self.electrode2_pos[1]] = ELECTRODE2  # example value for electrode 2
 
@@ -64,16 +64,6 @@ class RobotState:
     def update_electrode_area(self):
         # Check if there is wire in a 5x5 area around the electrodes
         self.electrode1_area = self.movement_area[self.electrode1_pos[0] - 2:self.electrode1_pos[0] + 3,
-                                            self.electrode1_pos[1] - 2:self.electrode1_pos[1] + 3]
+                               self.electrode1_pos[1] - 2:self.electrode1_pos[1] + 3]
         self.electrode2_area = self.movement_area[self.electrode2_pos[0] - 2:self.electrode2_pos[0] + 3,
-                                            self.electrode2_pos[1] - 2:self.electrode2_pos[1] + 3]
-
-
-
-class Action(Enum):
-    LEFT = (-1, 0, 0)
-    RIGHT = (1, 0, 0)
-    UP = (0, -1, 0)
-    DOWN = (0, 1, 0)
-    TURN_LEFT = (0, 0, -45)
-    TURN_RIGHT = (0, 0, 45)
+                               self.electrode2_pos[1] - 2:self.electrode2_pos[1] + 3]
