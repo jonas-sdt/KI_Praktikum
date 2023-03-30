@@ -10,6 +10,7 @@ from constants import AGENT, ELECTRODE1, ELECTRODE2
 class RobotState:
     def __init__(self, start_position, start_angle):
         self.position = start_position
+        self.end_position = (0, 0)
         self.angle = start_angle
         self.movement_area = None
         self.electrode1_pos = None
@@ -17,20 +18,15 @@ class RobotState:
         self.electrode1_area = None
         self.electrode2_area = None
         self.load_image()
+        self.update_end_position()
 
     def load_image(self):
         # Load the image
         path = os.getcwd() + '/training_images/image.png'
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
 
-        # Convert to numpy array
-        self.movement_area = np.asarray(img)
-
-        # Normalize the array
-        self.movement_area = self.movement_area / 255
-
-        # Invert the array
-        self.movement_area = 1 - self.movement_area
+        # Save the image as a numpy array where 0 is black and 1 is white
+        self.movement_area = np.where(img == 0, 0, 1)
 
     def update_area(self, agent_pos, agent_angle):
         # Add agent to starting position and angle
@@ -67,3 +63,16 @@ class RobotState:
                                self.electrode1_pos[1] - 2:self.electrode1_pos[1] + 3]
         self.electrode2_area = self.movement_area[self.electrode2_pos[0] - 2:self.electrode2_pos[0] + 3,
                                self.electrode2_pos[1] - 2:self.electrode2_pos[1] + 3]
+
+    def update_end_position(self):
+        # find the indices of rows where the last column has the value 1
+        y_coordinate = np.squeeze(np.argwhere(self.movement_area[:, -1] == 1))
+        self.end_position = (self.movement_area.shape[0] - 1, y_coordinate.item(0))
+        print(self.end_position)
+
+
+
+
+if __name__ == '__main__':
+    rs = RobotState((0, 0), 0)
+
