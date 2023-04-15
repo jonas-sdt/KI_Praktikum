@@ -15,11 +15,10 @@ class RobotState:
         self.movement_area = None
         self.electrode1_pos = None
         self.electrode2_pos = None
-        self.electrode1_area = None
-        self.electrode2_area = None
         self.load_image()
         self.update_start_position()
         self.update_end_position()
+        self.agent_area = None
 
     def load_image(self):
         # Load the image
@@ -42,14 +41,14 @@ class RobotState:
                                agent_pos[1] + int(electrode_distance * math.sin(electrode_angle - math.pi / 4)))
         self.movement_area[self.electrode1_pos[0], self.electrode1_pos[1]] = ELECTRODE1  # example value for electrode 1
         self.movement_area[self.electrode2_pos[0], self.electrode2_pos[1]] = ELECTRODE2  # example value for electrode 2
+        self.analyse_state()
 
     def do_action(self, action):
         # action is a tuple of (x, y, angle)
         print("Action: ", action)
-        self.position = (self.position[0] + action[0], self.position[1] + action[1])
-        self.angle = (self.angle + action[2]) % 360
+        self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
+        self.angle = (self.angle + action.value[2]) % 360
         self.update_area(self.position, self.angle)
-        self.update_electrode_area()
 
     def check_collision(self):
         # Check if one of the electrodes is on a wire
@@ -58,13 +57,6 @@ class RobotState:
             return True
         else:
             return False
-
-    def update_electrode_area(self):
-        # Check if there is wire in a 5x5 area around the electrodes
-        self.electrode1_area = self.movement_area[self.electrode1_pos[0] - 2:self.electrode1_pos[0] + 3,
-                               self.electrode1_pos[1] - 2:self.electrode1_pos[1] + 3]
-        self.electrode2_area = self.movement_area[self.electrode2_pos[0] - 2:self.electrode2_pos[0] + 3,
-                               self.electrode2_pos[1] - 2:self.electrode2_pos[1] + 3]
 
     def update_end_position(self):
         # find the indices of rows where the last column has the value 1
@@ -76,6 +68,8 @@ class RobotState:
         # find the indices of rows where the first column has the value 1
         y_coordinate = np.squeeze(np.argwhere(self.movement_area[:, 0] == 1))
         self.start_position = (0, y_coordinate.item(0))
+        self.position = self.start_position
+        self.update_area(self.position, self.angle)
         print(self.start_position)
 
     def plot_movement_area(self):
@@ -86,7 +80,11 @@ class RobotState:
         self.position = self.start_position
         self.angle = 0
         self.update_area(self.position, self.angle)
-        self.update_electrode_area()
+
+    def analyse_state(self):
+        # Create a new numpy array which is a 5x5 area around the agent with the values from the movement area
+        self.agent_area = self.movement_area[self.position[0] - 2:self.position[0] + 3,
+                                        self.position[1] - 2:self.position[1] + 3]
 
 
 # main function
