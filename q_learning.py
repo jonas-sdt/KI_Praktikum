@@ -25,12 +25,6 @@ class q_value_algorithm:
             return -1
 
     def get_q_value(self, state, action):
-        # if state in self.states:
-        #     for i in range(len(self.states)):
-        #         if self.states[i] == state:
-        #             return self.q_values[i][action.value]
-        # else:
-        #     return 0
         for i in range(len(self.states)):
             if self.states[i].is_equal(state):
                 return self.q_values[i][action.value]
@@ -63,14 +57,13 @@ class q_value_algorithm:
 
     def update_q_value(self, state, action, reward, new_state):
         max_q_value = self.get_max_q_value(new_state)
-        if state in self.states:
-            for i in range(len(self.states)):
-                if self.states[i] == state:
-                    self.q_values[i][action] = self.get_q_value(state, action) + self.alpha * (reward + self.gamma * max_q_value - self.get_q_value(state, action))
-        else:
-            self.states.append(state)
-            self.q_values.append([0, 0, 0, 0, 0, 0])
-            self.update_q_value(state, action, reward, new_state)
+        for i in range(len(self.states)):
+            if self.states[i].is_equal(state):
+                self.q_values[i][action.value] = self.get_q_value(state, action) + self.alpha * (reward + self.gamma * max_q_value - self.get_q_value(state, action))
+                return
+        self.states.append(state)
+        self.q_values.append([0, 0, 0, 0, 0, 0])
+        self.update_q_value(state, action, reward, new_state)
 
     def run(self):
         for i in range(self.episodes):
