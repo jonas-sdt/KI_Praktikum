@@ -5,6 +5,7 @@ import os
 import matplotlib.pyplot as plt
 
 from constants import AGENT, ELECTRODE1, ELECTRODE2
+from state import State
 
 
 class RobotState:
@@ -85,6 +86,10 @@ class RobotState:
         # Create a new numpy array which is a 5x5 area around the agent with the values from the movement area
         self.agent_area = self.movement_area[self.position[0] - 2:self.position[0] + 3,
                                         self.position[1] - 2:self.position[1] + 3]
+
+    def get_state(self):
+        current_state = State(self.position, self.electrode1_pos, self.electrode2_pos, self.agent_area)
+        return current_state
 
 
 # main function
