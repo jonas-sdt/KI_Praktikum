@@ -91,6 +91,12 @@ class RobotState:
         current_state = State(self.position, self.electrode1_pos, self.electrode2_pos, self.agent_area)
         return current_state
 
+    def check_end_position(self):
+        if self.position == self.end_position:
+            return True
+        else:
+            return False
+
 
 # main function
 if __name__ == '__main__':
