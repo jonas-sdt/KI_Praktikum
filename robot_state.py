@@ -8,7 +8,7 @@ from constants import AGENT, ELECTRODE1, ELECTRODE2
 from state import State
 
 
-class RobotState:
+class Environment:
     def __init__(self):
         self.position = (0, 0)
         self.end_position = (0, 0)
@@ -100,5 +100,5 @@ class RobotState:
 
 # main function
 if __name__ == '__main__':
-    robot_state = RobotState()
-    robot_state.plot_movement_area()
+    environment = Environment()
+    environment.plot_movement_area()

@@ -9,10 +9,7 @@ class State:
         if not isinstance(other, State):
             return False
 
-        print("Length of agent area: ", len(self.agent_area))
-        print("Length of other agent area: ", len(other.agent_area))
-
         return (self.position == other.position
                 and self.electrode1_pos == other.electrode1_pos
                 and self.electrode2_pos == other.electrode2_pos
-                and self.agent_area == other.agent_area)
+                and (self.agent_area == other.agent_area).all())
