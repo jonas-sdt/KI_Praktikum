@@ -1,6 +1,6 @@
 import random
 from action import Action
-from robot_state import Environment
+from environment import Environment
 
 
 class QValueAlgorithm:
@@ -10,7 +10,8 @@ class QValueAlgorithm:
         self.epsilon = 1
         self.alpha = 0.3
         self.gamma = 0.9
-        self.action_list = [Action.LEFT, Action.RIGHT, Action.UP, Action.DOWN, Action.TURN_LEFT, Action.TURN_RIGHT]
+        #self.action_list = [Action.LEFT, Action.RIGHT, Action.UP, Action.DOWN, Action.TURN_LEFT, Action.TURN_RIGHT]
+        self.action_list = list(Action)
         self.episodes = 1000
         self.environment = Environment()
         self.action_number = 0
@@ -30,10 +31,8 @@ class QValueAlgorithm:
             return max(self.action_list, key=lambda a: self.q_values.get((self.environment.get_state(), a), 0))
 
     def update_states(self, new_state):
-        for state in self.states:
-            if state.is_equal(new_state):
-                return
-        self.states.append(new_state)
+        if new_state not in self.states:
+            self.states.append(new_state)
 
     def update_q_values(self, current_state, action, reward, next_state):
         current_q = self.q_values.get((current_state, action), 0)

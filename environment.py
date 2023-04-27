@@ -4,6 +4,7 @@ import math
 import os
 import matplotlib.pyplot as plt
 
+from action import Action
 from constants import AGENT, ELECTRODE1, ELECTRODE2
 from state import State
 
@@ -20,6 +21,7 @@ class Environment:
         self.update_start_position()
         self.update_end_position()
         self.agent_area = None
+        self.do_start_steps()
 
     def load_image(self):
         # Load the image
@@ -96,6 +98,11 @@ class Environment:
             return True
         else:
             return False
+
+    def do_start_steps(self):
+        # Do 2 steps to get the agent away from the start position
+        self.do_action(Action.RIGHT)
+        self.do_action(Action.RIGHT)
 
 
 # main function
