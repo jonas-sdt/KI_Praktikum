@@ -72,6 +72,7 @@ class QValueAlgorithm:
 
         return best_action
 
+
 if __name__ == '__main__':
     q_value_algorithm = QValueAlgorithm()
     q_value_algorithm.run()

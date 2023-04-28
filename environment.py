@@ -1,8 +1,9 @@
-import cv2
-import numpy as np
 import math
 import os
+
+import cv2
 import matplotlib.pyplot as plt
+import numpy as np
 
 from action import Action
 from constants import AGENT, ELECTRODE1, ELECTRODE2
@@ -88,7 +89,7 @@ class Environment:
     def analyse_state(self):
         # Create a new numpy array which is a 5x5 area around the agent with the values from the movement area
         self.agent_area = self.movement_area[self.position[0] - 2:self.position[0] + 3,
-                                        self.position[1] - 2:self.position[1] + 3]
+                          self.position[1] - 2:self.position[1] + 3]
 
     def get_state(self):
         # This method shouldn't be needed later on, when the state is done.

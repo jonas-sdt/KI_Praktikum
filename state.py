@@ -1,4 +1,3 @@
-
 # For now the class still uses the old attributes. Change later, when the new attributes (nxn array) are implemented.
 class State:
     def __init__(self, position, electrode1_pos, electrode2_pos, agent_area):
@@ -13,4 +12,5 @@ class State:
     def __eq__(self, other):
         if not isinstance(other, State):
             return False
-        return (self.position, self.electrode1_pos, self.electrode2_pos, tuple(map(tuple, self.agent_area))) == (other.position, other.electrode1_pos, other.electrode2_pos, tuple(map(tuple, other.agent_area)))
+        return (self.position, self.electrode1_pos, self.electrode2_pos, tuple(map(tuple, self.agent_area))) == (
+        other.position, other.electrode1_pos, other.electrode2_pos, tuple(map(tuple, other.agent_area)))
