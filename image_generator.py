@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import random
 from spline import spline as generate_spline
+import os
 
 """ This class is responsible to generate a black image with a spline drawn on it.
 """
@@ -32,8 +33,14 @@ class ImageGenerator:
         cv2.imshow('Generated Image', self.img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-        
+
+    def save_image(self):
+        path = os.getcwd()
+        cv2.imwrite(path + '/training_images/image.png', self.img)
+
+
 if __name__ == '__main__':
     img_gen = ImageGenerator(512, 512)
     img_gen.generate_image()
     img_gen.show_image()
+    img_gen.save_image()
