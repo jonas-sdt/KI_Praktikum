@@ -1,4 +1,7 @@
 import random
+
+import numpy as np
+
 from action import Action
 from environment import Environment
 
@@ -6,11 +9,9 @@ from environment import Environment
 class QValueAlgorithm:
     def __init__(self):
         self.q_values = {}
-        self.states = []
         self.epsilon = 1
         self.alpha = 0.3
         self.gamma = 0.9
-        #self.action_list = [Action.LEFT, Action.RIGHT, Action.UP, Action.DOWN, Action.TURN_LEFT, Action.TURN_RIGHT]
         self.action_list = list(Action)
         self.episodes = 1000
         self.environment = Environment()
@@ -24,21 +25,21 @@ class QValueAlgorithm:
         else:
             return -1
 
-    def choose_action(self):
+    def choose_action(self, current_state):
         if random.random() < self.epsilon:
             return random.choice(self.action_list)
         else:
-            return max(self.action_list, key=lambda a: self.q_values.get((self.environment.get_state(), a), 0))
+            return self.get_best_action(current_state)
 
     def update_states(self, new_state):
-        if new_state not in self.states:
-            self.states.append(new_state)
+        if new_state not in self.q_values.keys():
+            self.q_values[new_state] = np.zeros(len(self.action_list))
 
     def update_q_values(self, current_state, action, reward, next_state):
-        current_q = self.q_values.get((current_state, action), 0)
-        max_next_q = max(self.q_values.get((next_state, a), 0) for a in self.action_list)
+        current_q = self.q_values.get(current_state)[self.action_list.index(action)]
+        max_next_q = max(self.q_values.get(next_state))
         updated_q = current_q + self.alpha * (reward + self.gamma * max_next_q - current_q)
-        self.q_values[(current_state, action)] = updated_q
+        self.q_values.get(current_state)[self.action_list.index(action)] = updated_q
 
     def run(self):
         for i in range(self.episodes):
@@ -47,7 +48,7 @@ class QValueAlgorithm:
             self.update_states(current_state)
 
             while True:
-                action = self.choose_action()
+                action = self.choose_action(current_state)
                 self.environment.do_action(action)
                 reward = self.get_reward()
                 next_state = self.environment.get_state()
@@ -60,6 +61,16 @@ class QValueAlgorithm:
 
             self.epsilon -= 0.01
 
+    def get_best_action(self, current_state):
+        best_action = None
+        best_q = float('-inf')
+        for action in self.action_list:
+            q_value = self.q_values.get(current_state)[self.action_list.index(action)]
+            if q_value > best_q:
+                best_q = q_value
+                best_action = action
+
+        return best_action
 
 if __name__ == '__main__':
     q_value_algorithm = QValueAlgorithm()

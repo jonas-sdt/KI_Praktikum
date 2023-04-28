@@ -24,6 +24,7 @@ class Environment:
         self.do_start_steps()
 
     def load_image(self):
+        # TODO: Move this to different file / class
         # Load the image
         path = os.getcwd() + '/training_images/image.png'
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
@@ -90,6 +91,7 @@ class Environment:
                                         self.position[1] - 2:self.position[1] + 3]
 
     def get_state(self):
+        # This method shouldn't be needed later on, when the state is done.
         current_state = State(self.position, self.electrode1_pos, self.electrode2_pos, self.agent_area)
         return current_state
 
