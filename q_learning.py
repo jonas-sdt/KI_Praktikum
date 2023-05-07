@@ -43,15 +43,15 @@ class QValueAlgorithm:
 
     def run(self):
         for i in range(self.episodes):
-            self.environment.reset()
-            current_state = self.environment.get_state()
+            self.environment.reset_agent()
+            current_state = self.environment.get_current_state()
             self.update_states(current_state)
 
             while True:
                 action = self.choose_action(current_state)
                 self.environment.do_action(action)
                 reward = self.get_reward()
-                next_state = self.environment.get_state()
+                next_state = self.environment.get_current_state()
                 self.update_states(next_state)
                 self.update_q_values(current_state, action, reward, next_state)
 
