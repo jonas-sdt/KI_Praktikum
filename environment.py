@@ -9,39 +9,32 @@ from state import State
 
 
 class Environment:
-    def __init__(self, image_path):
-        self.position = (0, 0) # TODO: Change to start position
+    def __init__(self, image: np.array, pixel_to_mm_ratio):
+        self.position = (0, 0)  # TODO: Change to start position
         self.end_position = (0, 0)
-        self.angle = 0
-        self.image = None
-        self.__load_image(image_path)
+        self.orientation = 0
+        self.current_state = None
+        self.pixel_to_mm_ratio = 1
+        self.next_state = None
+        self.image = image
         self.__do_two_steps()
-
-    def __load_image(self, path):
-        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-
-        # Save the image as a numpy array where 0 is black and 1 is white
-        self.image = np.where(img == 0, 0, 1)
 
     def __do_two_steps(self):
         self.do_action(Action.RIGHT)
         self.do_action(Action.RIGHT)
 
     def do_action(self, action):
-        # action is a tuple of (x, y, angle)
+        # action is a tuple of (x, y, orientation)
         print("Action: ", action)
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
-        self.angle = (self.angle + action.value[2]) % 360
+        self.orientation = (self.orientation + action.value[2]) % 360
         self.image[self.position[0], self.position[1]] = AGENT
+        self.next_state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio)
 
     def reset_agent(self):
         self.position = (0, 0) # TODO: Change to start position
-        self.angle = 0
+        self.orientation = 0
         self.image[self.position[0], self.position[1]] = AGENT
-
-    def get_current_state(self):
-        current_state = State(self.position, self.electrode1_pos, self.electrode2_pos, self.agent_area)
-        return current_state
 
     def check_end_position(self):
         if self.position[0] == self.end_position[0] - 2 and self.position[1] == self.end_position[1]:
@@ -50,9 +43,11 @@ class Environment:
         else:
             return False
 
+    def update_states(self):
+        self.current_state = self.next_state
+
 
 # main function
 if __name__ == '__main__':
     training_image_path = os.path.join(os.getcwd(), "training_images", "image_1.png")
     environment = Environment(training_image_path)
-    environment.plot_movement_area()
