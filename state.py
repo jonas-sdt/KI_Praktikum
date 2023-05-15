@@ -7,7 +7,7 @@ class State:
         roi_size = 50 # in mm
         self.matrix = np.zeros((5,5))
         
-        roi = image[position[0]-roi_size/2*pixel_to_mm_ratio:position[0]+roi_size/2*pixel_to_mm_ratio, position[1]-roi_size/2*pixel_to_mm_ratio:position[1]+roi_size/2*pixel_to_mm_ratio]
+        roi = image[int(position[0]-roi_size/2*pixel_to_mm_ratio):int(position[0]+roi_size/2*pixel_to_mm_ratio)][int(position[1]-roi_size/2*pixel_to_mm_ratio):int(position[1]+roi_size/2*pixel_to_mm_ratio)]
         
         num_of_pixels_vert = roi.shape[0]
         num_of_pixels_hor = roi.shape[1]
@@ -17,7 +17,7 @@ class State:
             for col in range(5):
 
                 # check if area in roi is wire
-                if np.sum(roi[row*num_of_pixels_vert/5:(row+1)*num_of_pixels_vert/5, col*num_of_pixels_hor/5:(col+1)*num_of_pixels_hor/5]) > 0:
+                if np.sum(roi[int(row*num_of_pixels_vert/5):int((row+1)*num_of_pixels_vert/5)][int(col*num_of_pixels_hor/5):int((col+1)*num_of_pixels_hor/5)]) > 0:
                     self.matrix[row][col] = 1
 
         if orientation % 180 == 0:
@@ -43,3 +43,8 @@ class State:
         if not isinstance(other, State):
             return False
         return self.__hash__() == other.__hash__()
+
+
+if __name__ == "__main__":
+    # test
+    state = State(np.zeros((100,100)), (50,50), 0, 1)
