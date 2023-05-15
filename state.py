@@ -37,7 +37,7 @@ class State:
         return 3 in self.matrix
 
     def __hash__(self):
-        return hash(self.matrix)
+        return hash(self.matrix.tobytes())
 
     def __eq__(self, other):
         if not isinstance(other, State):
@@ -48,3 +48,4 @@ class State:
 if __name__ == "__main__":
     # test
     state = State(np.zeros((100,100)), (50,50), 0, 1)
+    hash = state.__hash__()
