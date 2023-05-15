@@ -19,8 +19,8 @@ class QValueAlgorithm:
         self.episodes = 1000
         self.action_number = 0
 
-    def get_reward(self, environment):
-        if environment.next_state.is_collided():
+    def get_reward(self, state):
+        if state.is_collided():
             return -1000
         else:
             return -1
@@ -31,9 +31,9 @@ class QValueAlgorithm:
         else:
             return self.get_best_action(environment.current_state)
 
-    def update_states(self, environment):
-        if environment.next_state not in self.q_values.keys():
-            self.q_values[environment.next_state] = np.zeros(len(self.action_list))
+    def update_states(self, next_state):
+        if next_state not in self.q_values.keys():
+            self.q_values[next_state] = np.zeros(len(self.action_list))
 
     def update_q_values(self, environment, action, reward):
         current_q = self.q_values.get(environment.current_state)[self.action_list.index(action)]
@@ -53,13 +53,13 @@ class QValueAlgorithm:
     def explore(self, environment):
         for i in range(self.episodes):
             environment.reset_agent()
+            environment.update_states()
             current_state = environment.current_state
-            self.update_states(environment)
+            self.update_states(environment.next_state)
 
             while True:
                 action = self.choose_action(current_state)
                 environment.do_action(action)
-                next_state = environment.next_state()
                 reward = self.get_reward(environment.next_state)
                 self.update_states(environment.next_state)
                 self.update_q_values(environment, action, reward)
