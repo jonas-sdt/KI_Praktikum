@@ -1,5 +1,7 @@
+import os
 import random
 
+import cv2
 import numpy as np
 
 from action import Action
@@ -82,4 +84,20 @@ class QValueAlgorithm:
 
 if __name__ == '__main__':
     q_value_algorithm = QValueAlgorithm()
-    print(q_value_algorithm.q_values)
+    decision = input("Choose A for exec or B for training")
+    if decision == "A":
+        file_path = ""
+        file_name = ""
+        try:
+            file_path = os.getcwd() + "/real_images"
+            file_name = os.listdir(file_path)[0]
+        except FileNotFoundError:
+            print("File not found")
+            exit(1)
+
+        image = cv2.imread(file_path + "/" + file_name)
+        q_value_algorithm.learn_exec(image)
+    elif decision == "B":
+        q_value_algorithm.learn_training()
+    else:
+        raise RuntimeError
