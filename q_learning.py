@@ -19,27 +19,29 @@ class QValueAlgorithm:
         self.episodes = 1000
         self.action_number = 0
 
-    def get_reward(self, state):
-        if state.is_collided():
-            return -1000
+    def get_reward(self, environment):
+        if environment.next_state.is_collided():
+            return -100
         else:
             return -1
 
     def choose_action(self, environment):
-        if random.random() < self.epsilon:
-            return random.choice(self.action_list)
+        if random.uniform(0, 1) < self.epsilon:
+            action = random.choice(self.action_list)
         else:
-            return self.get_best_action(environment.current_state)
+            action = self.get_best_action(environment)
 
-    def update_states(self, next_state):
-        if next_state not in self.q_values.keys():
-            self.q_values[next_state] = np.zeros(len(self.action_list))
+        return action
 
-    def update_q_values(self, environment, action, reward):
-        current_q = self.q_values.get(environment.current_state)[self.action_list.index(action)]
-        max_next_q = max(self.q_values.get(environment.next_state))
-        updated_q = current_q + self.alpha * (reward + self.gamma * max_next_q - current_q)
-        self.q_values.get(environment.current_state)[self.action_list.index(action)] = updated_q
+    def get_q_value(self, environment, action):
+        value = (1 - self.alpha) * self.q_values.get(environment.current_state)[self.action_list.index(action)] + self.alpha * (self.get_reward(environment) + self.gamma * max(self.q_values.get(environment.next_state)))
+        return value
+
+    def update_q_values(self, environment, action):
+        if environment.next_state not in self.q_values:
+            self.q_values[environment.current_state] = [0] * len(self.action_list)
+        else:
+            self.q_values[environment.current_state][self.action_list.index(action)] = self.get_q_value(environment, action)
 
     def learn_training(self):
         igen = ImageGenerator(512, 512)
@@ -54,19 +56,11 @@ class QValueAlgorithm:
         for i in range(self.episodes):
             environment.reset_agent()
             environment.update_states()
-            current_state = environment.current_state
-            self.update_states(environment.next_state)
-
-            while True:
-                action = self.choose_action(current_state)
+            while not environment.check_end_position():
+                action = self.choose_action(environment)
                 environment.do_action(action)
-                reward = self.get_reward(environment.next_state)
-                self.update_states(environment.next_state)
-                self.update_q_values(environment, action, reward)
-
+                self.update_q_values(environment, action)
                 environment.update_states()
-                if environment.check_end_position():
-                    break
 
             self.epsilon -= 0.01
 

@@ -35,6 +35,8 @@ class Environment:
         self.position = (0, 0) # TODO: Change to start position
         self.orientation = 0
         self.image[self.position[0], self.position[1]] = AGENT
+        self.do_action(Action.RIGHT)
+        self.do_action(Action.RIGHT)
 
     def check_end_position(self):
         if self.position[0] == self.end_position[0] - 2 and self.position[1] == self.end_position[1]:
