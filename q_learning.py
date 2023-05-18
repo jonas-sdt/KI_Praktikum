@@ -2,7 +2,6 @@ import os
 import random
 
 import cv2
-import numpy as np
 
 from action import Action
 from environment import Environment
@@ -31,17 +30,40 @@ class QValueAlgorithm:
         else:
             action = self.get_best_action(environment)
 
-        return action
+        if self.check_action_validity(environment, action):
+            return action
+        else:
+            raise Exception("Invalid action")
+
 
     def get_q_value(self, environment, action):
-        value = (1 - self.alpha) * self.q_values.get(environment.current_state)[self.action_list.index(action)] + self.alpha * (self.get_reward(environment) + self.gamma * max(self.q_values.get(environment.next_state)))
+        if environment.current_state not in self.q_values:
+            self.q_values[environment.current_state] = [0] * len(self.action_list)
+        if environment.next_state not in self.q_values:
+            self.q_values[environment.next_state] = [0] * len(self.action_list)
+
+        value = (1 - self.alpha) * self.q_values[environment.current_state][
+            self.action_list.index(action)] + self.alpha * (
+                            self.get_reward(environment) + self.gamma * max(self.q_values[environment.next_state]))
         return value
 
     def update_q_values(self, environment, action):
         if environment.next_state not in self.q_values:
-            self.q_values[environment.current_state] = [0] * len(self.action_list)
+            self.q_values[environment.next_state] = [0] * len(self.action_list)
+
+        self.q_values[environment.current_state][self.action_list.index(action)] = self.get_q_value(environment, action)
+
+    def check_action_validity(self, environment, action):
+        if environment.position[0] == 0 and action == Action.LEFT:
+            return False
+        elif environment.position[0] == environment.image.shape[0] - 1 and action == Action.RIGHT:
+            return False
+        elif environment.position[1] == 0 and action == Action.UP:
+            return False
+        elif environment.position[1] == environment.image.shape[1] - 1 and action == Action.DOWN:
+            return False
         else:
-            self.q_values[environment.current_state][self.action_list.index(action)] = self.get_q_value(environment, action)
+            return True
 
     def learn_training(self):
         igen = ImageGenerator(512, 512)
@@ -54,7 +76,6 @@ class QValueAlgorithm:
 
     def explore(self, environment):
         for i in range(self.episodes):
-            environment.reset_agent()
             environment.update_states()
             while not environment.check_end_position():
                 action = self.choose_action(environment)
@@ -62,7 +83,12 @@ class QValueAlgorithm:
                 self.update_q_values(environment, action)
                 environment.update_states()
 
-            self.epsilon -= 0.01
+                self.epsilon -= 0.01
+
+            self.epsilon = 1
+            print("Episode: " + str(i) + " finished")
+            environment.show_image()
+            environment.reset_agent()
 
     def get_best_action(self, environment):
         best_action = None

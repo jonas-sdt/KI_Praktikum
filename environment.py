@@ -10,8 +10,8 @@ from state import State
 
 class Environment:
     def __init__(self, image: np.array, pixel_to_mm_ratio):
-        self.position = (0, 0)  # TODO: Change to start position
-        self.end_position = (0, 0)
+        self.position = (0, 256)  # TODO: Change to start position
+        self.end_position = (512, 256)
         self.orientation = 0
         self.current_state = None
         self.pixel_to_mm_ratio = 1
