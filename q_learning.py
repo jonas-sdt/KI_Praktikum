@@ -70,6 +70,7 @@ class QValueAlgorithm:
     def learn_training(self):
         igen = ImageGenerator(512, 512)
         image = igen.generate_image()
+        image = image[:, :, 0] / 255
         self.learn_exec(image)
 
     def learn_exec(self, image):
