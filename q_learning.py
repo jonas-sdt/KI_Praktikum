@@ -10,6 +10,7 @@ from image_generator import ImageGenerator
 
 class QValueAlgorithm:
     def __init__(self):
+        self.__out_of_bounds = False
         self.q_values = {}
         self.epsilon = 1
         self.alpha = 0.3
@@ -19,6 +20,9 @@ class QValueAlgorithm:
         self.action_number = 0
 
     def get_reward(self, environment):
+        if self.__out_of_bounds:
+            return -100
+
         if environment.next_state.is_collided():
             return -100
         else:
@@ -30,11 +34,9 @@ class QValueAlgorithm:
         else:
             action = self.get_best_action(environment)
 
-        if self.check_action_validity(environment, action):
-            return action
-        else:
-            raise Exception("Invalid action")
+        self.check_action_validity(environment, action)
 
+        return action
 
     def get_q_value(self, environment, action):
         if environment.current_state not in self.q_values:
@@ -54,16 +56,16 @@ class QValueAlgorithm:
         self.q_values[environment.current_state][self.action_list.index(action)] = self.get_q_value(environment, action)
 
     def check_action_validity(self, environment, action):
+        ROWS, COLS = environment.image.shape[:2]
+
         if environment.position[0] == 0 and action == Action.LEFT:
-            return False
-        elif environment.position[0] == environment.image.shape[0] - 1 and action == Action.RIGHT:
-            return False
+            self.__out_of_bounds = True
+        elif environment.position[0] == ROWS - 1 and action == Action.RIGHT:
+            self.__out_of_bounds = True
         elif environment.position[1] == 0 and action == Action.UP:
-            return False
-        elif environment.position[1] == environment.image.shape[1] - 1 and action == Action.DOWN:
-            return False
-        else:
-            return True
+            self.__out_of_bounds = True
+        elif environment.position[1] == COLS - 1 and action == Action.DOWN:
+            self.__out_of_bounds = True
 
     def learn_training(self):
         igen = ImageGenerator(512, 512)
@@ -79,6 +81,10 @@ class QValueAlgorithm:
             environment.update_states()
             while not environment.check_end_position():
                 action = self.choose_action(environment)
+                if self.__out_of_bounds:
+                    print("Invalid action, out of bounds")
+                    self.__out_of_bounds = False
+                    break
                 environment.do_action(action)
                 self.update_q_values(environment, action)
                 environment.update_states()
@@ -87,8 +93,10 @@ class QValueAlgorithm:
 
             self.epsilon = 1
             print("Episode: " + str(i) + " finished")
-            environment.show_image()
             environment.reset_agent()
+
+        print("Training finished")
+        print(self.q_values)
 
     def get_best_action(self, environment):
         best_action = None
