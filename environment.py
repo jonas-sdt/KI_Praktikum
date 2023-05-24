@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 from action import Action
-from constants import AGENT
+from constants import AGENT, WIRE, NO_WIRE, AGENT_ON_WIRE, AGENT_ON_NO_WIRE
 from state import State
 
 
@@ -23,12 +23,26 @@ class Environment:
         self.do_action(Action.RIGHT)
         self.do_action(Action.RIGHT)
 
+    def clean_image(self):
+        pixel = self.image[self.position[0], self.position[1]]
+
+        if pixel == AGENT_ON_WIRE:
+            pixel = WIRE
+        elif pixel == AGENT_ON_NO_WIRE:
+            pixel = NO_WIRE
+        else:
+            print("Error: Invalid pixel value")
+            raise Exception
+
+        self.image[self.position[0], self.position[1]] = pixel
+
     def do_action(self, action):
         # action is a tuple of (x, y, orientation)
         print("Action: ", action)
+        self.clean_image()
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
         self.orientation = (self.orientation + action.value[2]) % 360
-        self.image[self.position[0], self.position[1]] = AGENT
+        self.image[self.position[0], self.position[1]] = self.image[self.position[0], self.position[1]] + AGENT
         self.next_state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio)
 
     def reset_agent(self):

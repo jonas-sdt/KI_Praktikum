@@ -1,4 +1,5 @@
 import os
+import pickle
 import random
 
 import cv2
@@ -46,7 +47,7 @@ class QValueAlgorithm:
 
         value = (1 - self.alpha) * self.q_values[environment.current_state][
             self.action_list.index(action)] + self.alpha * (
-                            self.get_reward(environment) + self.gamma * max(self.q_values[environment.next_state]))
+                        self.get_reward(environment) + self.gamma * max(self.q_values[environment.next_state]))
         return value
 
     def update_q_values(self, environment, action):
@@ -98,6 +99,7 @@ class QValueAlgorithm:
 
         print("Training finished")
         print(self.q_values)
+        self.save_q_values()
 
     def get_best_action(self, environment):
         best_action = None
@@ -109,6 +111,11 @@ class QValueAlgorithm:
                 best_action = action
 
         return best_action
+
+    def save_q_values(self):
+        pickle_file_path = os.getcwd() + "/q_values_finished.pickle"
+        with open(pickle_file_path, 'wb') as file:
+            pickle.dump(self.q_values, file)
 
 
 if __name__ == '__main__':
