@@ -7,6 +7,7 @@ import cv2
 from action import Action
 from environment import Environment
 from image_generator import ImageGenerator
+from dialogue import main as dialogue_main
 
 
 class QValueAlgorithm:
@@ -94,7 +95,8 @@ class QValueAlgorithm:
                 self.epsilon -= 0.01
 
             self.epsilon = 1
-            print("Episode: " + str(i) + " finished")
+            print("Episode: " + str(i) + " finished. Position: " + str(environment.position))
+            input("Press enter to continue")
             environment.reset_agent()
 
         print("Training finished")
@@ -120,8 +122,9 @@ class QValueAlgorithm:
 
 if __name__ == '__main__':
     q_value_algorithm = QValueAlgorithm()
-    decision = input("Choose A for exec or B for training")
-    if decision == "A":
+    decision = dialogue_main()
+    if decision:
+        print("User chose to use real images")
         file_path = ""
         file_name = ""
         try:
@@ -133,7 +136,8 @@ if __name__ == '__main__':
 
         image = cv2.imread(file_path + "/" + file_name)
         q_value_algorithm.learn_exec(image)
-    elif decision == "B":
+    elif not decision:
+        print("User chose to use generated images")
         q_value_algorithm.learn_training()
     else:
         raise RuntimeError

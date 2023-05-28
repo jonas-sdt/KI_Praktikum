@@ -26,6 +26,7 @@ class ChoiceDialog:
         self.ok_button.pack(fill=tk.X, pady=10)
 
         self.choice = None
+        self.chose_execution = None
 
     def option_selected(self, selected_option):
         self.choice = selected_option
@@ -38,8 +39,10 @@ class ChoiceDialog:
     def run(self):
         if self.choice == "Execution":
             print("User chose Execution")
+            self.chose_execution = True
         elif self.choice == "Training":
             print("User chose Training")
+            self.chose_execution = False
         else:
             print("No option selected")
 
@@ -57,6 +60,7 @@ def main():
     choice_dialog = ChoiceDialog(root)
     choice_dialog.show_dialog()
     choice_dialog.run()
+    return choice_dialog.chose_execution
 
 
 if __name__ == "__main__":

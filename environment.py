@@ -2,6 +2,7 @@ import os
 
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 
 from action import Action
 from constants import AGENT, WIRE, NO_WIRE, AGENT_ON_WIRE, AGENT_ON_NO_WIRE
@@ -17,6 +18,7 @@ class Environment:
         self.pixel_to_mm_ratio = 1
         self.next_state = None
         self.image = image
+        self.__first_action = True
         self.__do_two_steps()
 
     def __do_two_steps(self):
@@ -25,13 +27,12 @@ class Environment:
 
     def clean_image(self):
         pixel = self.image[self.position[0], self.position[1]]
-
         if pixel == AGENT_ON_WIRE:
             pixel = WIRE
         elif pixel == AGENT_ON_NO_WIRE:
             pixel = NO_WIRE
         else:
-            print("Error: Invalid pixel value")
+            print("Error: Invalid pixel value, value: ", pixel, " position: ", self.position, " orientation: ", self.orientation)
             raise Exception
 
         self.image[self.position[0], self.position[1]] = pixel
@@ -39,14 +40,16 @@ class Environment:
     def do_action(self, action):
         # action is a tuple of (x, y, orientation)
         print("Action: ", action)
-        self.clean_image()
+        if not self.__first_action:
+            self.clean_image()
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
         self.orientation = (self.orientation + action.value[2]) % 360
         self.image[self.position[0], self.position[1]] = self.image[self.position[0], self.position[1]] + AGENT
         self.next_state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio)
+        self.__first_action = False
 
     def reset_agent(self):
-        self.position = (0, 0) # TODO: Change to start position
+        self.position = (0, 256) # TODO: Change to start position
         self.orientation = 0
         self.image[self.position[0], self.position[1]] = AGENT
         self.do_action(Action.RIGHT)
