@@ -25,23 +25,11 @@ class Environment:
         self.do_action(Action.RIGHT)
         self.do_action(Action.RIGHT)
 
-    def clean_image(self):
-        pixel = self.image[self.position[0], self.position[1]]
-        if pixel == AGENT_ON_WIRE:
-            pixel = WIRE
-        elif pixel == AGENT_ON_NO_WIRE:
-            pixel = NO_WIRE
-        else:
-            print("Error: Invalid pixel value, value: ", pixel, " position: ", self.position, " orientation: ", self.orientation)
-            raise Exception
-
-        self.image[self.position[0], self.position[1]] = pixel
-
     def do_action(self, action):
         # action is a tuple of (x, y, orientation)
         print("Action: ", action)
         if not self.__first_action:
-            self.clean_image()
+            self.image[self.position[0], self.position[1]] = self.image[self.position[0], self.position[1]] - AGENT
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
         self.orientation = (self.orientation + action.value[2]) % 360
         self.image[self.position[0], self.position[1]] = self.image[self.position[0], self.position[1]] + AGENT
@@ -64,9 +52,3 @@ class Environment:
 
     def update_states(self):
         self.current_state = self.next_state
-
-
-# main function
-if __name__ == '__main__':
-    training_image_path = os.path.join(os.getcwd(), "training_images", "image_1.png")
-    environment = Environment(training_image_path)

@@ -44,7 +44,7 @@ class ChoiceDialog:
             print("User chose Training")
             self.chose_execution = False
         else:
-            print("No option selected")
+            raise ValueError("No option selected")
 
     def show_dialog(self):
         self.root.deiconify()

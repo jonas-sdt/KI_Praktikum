@@ -96,7 +96,6 @@ class QValueAlgorithm:
 
             self.epsilon = 1
             print("Episode: " + str(i) + " finished. Position: " + str(environment.position))
-            input("Press enter to continue")
             environment.reset_agent()
 
         print("Training finished")
