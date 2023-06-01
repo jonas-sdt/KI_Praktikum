@@ -54,9 +54,10 @@ class Environment:
     def reset_agent(self):
         self.position = (0, 256)  # TODO: Change to start position
         self.orientation = 0
-        self.image[self.position[0], self.position[1]] = AGENT
-        self.do_action(Action.RIGHT)
-        self.do_action(Action.RIGHT)
+        # self.image[self.position[0], self.position[1]] = AGENT
+        # self.do_action(Action.RIGHT)
+        # self.do_action(Action.RIGHT)
+        self.__do_two_steps()
 
     def check_end_position(self):
         if self.position[0] == self.end_position[0] - 2 and self.position[1] == self.end_position[1]:
