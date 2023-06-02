@@ -26,9 +26,13 @@ class QValueAlgorithm:
             return -100
 
         if environment.next_state.is_collided():
+            environment.reset_to_last_position()
             return -100
+        if environment.position in environment.old_positions:
+            return -10
         else:
-            return -1
+            environment.save_last_position()
+            return 2
 
     def choose_action(self, environment):
         if random.uniform(0, 1) < self.epsilon:
@@ -101,6 +105,7 @@ class QValueAlgorithm:
         print("Training finished")
         print(self.q_values)
         self.save_q_values()
+        self.show_q_values()
 
     def get_best_action(self, environment):
         best_action = None
@@ -117,6 +122,10 @@ class QValueAlgorithm:
         pickle_file_path = os.getcwd() + "/q_values_finished.pickle"
         with open(pickle_file_path, 'wb') as file:
             pickle.dump(self.q_values, file)
+
+    def show_q_values(self):
+        for key, value in self.q_values.items():
+            print(key.state_matrix)
 
 
 if __name__ == '__main__':
