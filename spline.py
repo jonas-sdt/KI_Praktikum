@@ -2,7 +2,7 @@ import numpy as np
 import scipy.interpolate as si
 import random
 import matplotlib.pyplot as plt
-from polyline import polyline
+from polyline import polyline_generator
 
 def bspline(cv, n=100, degree=3, periodic=False):
     """ Calculate n samples on a bspline
@@ -42,7 +42,7 @@ def bspline(cv, n=100, degree=3, periodic=False):
     return np.array(si.splev(u, (kv,cv.T,degree))).T
 
 def spline(width, height):
-    cv = polyline()
+    cv = list(polyline_generator(6))
     d=2
     p = bspline(cv,n=100,degree=d,periodic=False)
     x,y = p.T
@@ -52,16 +52,13 @@ def spline(width, height):
 
 
 if __name__ == '__main__':
-    cv = polyline()
-
-    plt.plot(cv[:,0],cv[:,1], 'o-', label='Control Points')
+    cv = np.array(list(polyline_generator(6)))
+    plt.plot(cv.T[0], cv.T[1], 'o-', label='Control Points')
     
     d=2
     p = bspline(cv,n=100,degree=d,periodic=False)
     x,y = p.T
     plt.plot(x,y,'k-')
-
-    print(p)
 
     plt.minorticks_on()
     plt.legend()
