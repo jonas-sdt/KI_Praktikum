@@ -1,5 +1,4 @@
 import numpy as np
-from image_generator import ImageGenerator
 # TODO: fix wire detection
 # TODO: implement fct for detecting out of bounds
 
@@ -70,12 +69,3 @@ class State:
             return False
         return self.__hash__() == other.__hash__()
 
-
-if __name__ == "__main__":
-    # test
-    img_gen  = ImageGenerator(512,512)
-    img = img_gen.generate_image()
-    state = State(img, (256,256), 0, 1)
-    hash = state.__hash__()
-    print(state)
-    img_gen.show_image()
