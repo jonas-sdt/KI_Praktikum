@@ -22,9 +22,11 @@ class Environment:
         self.old_positions = []
         self.__last_position = (0, 256)
         self.__first_action = True
-        self.__do_two_steps()
+        self.__do_four_steps()
 
-    def __do_two_steps(self):
+    def __do_four_steps(self):
+        self.do_action(Action.RIGHT)
+        self.do_action(Action.RIGHT)
         self.do_action(Action.RIGHT)
         self.do_action(Action.RIGHT)
 
@@ -76,11 +78,11 @@ class Environment:
         # self.image[self.position[0], self.position[1]] = AGENT
         # self.do_action(Action.RIGHT)
         # self.do_action(Action.RIGHT)
-        self.__do_two_steps()
+        self.__do_four_steps()
 
     def check_end_position(self):
         if self.position[0] == self.end_position[0] - 2 and self.position[1] == self.end_position[1]:
-            self.__do_two_steps()
+            self.__do_four_steps()
             return True
         else:
             return False

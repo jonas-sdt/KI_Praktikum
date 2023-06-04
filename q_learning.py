@@ -6,7 +6,7 @@ import cv2
 
 from action import Action
 from environment import Environment
-from image_generator import ImageGenerator
+import image_generator 
 from dialogue import main as dialogue_main
 
 
@@ -74,9 +74,8 @@ class QValueAlgorithm:
             self.__out_of_bounds = True
 
     def learn_training(self):
-        igen = ImageGenerator(512, 512)
-        image = igen.generate_image()
-        image = image[:, :, 0] / 255
+        image = image_generator.generate_image(512, 512)
+        image = image[:, :, 0] / 255                        # ? what is this doing
         self.learn_exec(image)
 
     def learn_exec(self, image):
