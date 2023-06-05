@@ -3,10 +3,11 @@ import image_generator
 import cv2
 from constants import *
 
-
 # For now the class still uses the old attributes. Change later, when the new attributes (nxn array) are implemented.
 class State:
-    def __init__(self, image, position: tuple, orientation: int, pixel_to_mm_ratio: float):
+    def __init__(self, image, position: tuple, orientation: int, pixel_to_mm_ratio: float, local_goal_position: tuple):
+        
+        self.orientation = orientation
         
         roi_size = 50 # in mm
         self.matrix = np.zeros((5,5))
@@ -55,29 +56,44 @@ class State:
                     self.matrix[row][col] = 1
 
         if orientation % 180 == 0:
-            self.matrix[0][2] = 2 if self.matrix[0][2] == 0 else 3
-            self.matrix[4][2] = 2 if self.matrix[4][2] == 0 else 3
+            self.matrix[0][2] = ELECTRODE_1 if self.matrix[0][2] == NO_WIRE else COLLISION
+            self.matrix[4][2] = ELECTRODE_2 if self.matrix[4][2] == NO_WIRE else COLLISION
         elif orientation % 180 == 45:
-            self.matrix[4][0] = 2 if self.matrix[4][0] == 0 else 3
-            self.matrix[0][4] = 2 if self.matrix[0][4] == 0 else 3
+            self.matrix[4][0] = ELECTRODE_1 if self.matrix[4][0] == NO_WIRE else COLLISION
+            self.matrix[0][4] = ELECTRODE_2 if self.matrix[0][4] == NO_WIRE else COLLISION
         elif orientation % 180 == 90:
-            self.matrix[2][0] = 2 if self.matrix[2][0] == 0 else 3
-            self.matrix[2][4] = 2 if self.matrix[2][4] == 0 else 3
+            self.matrix[2][0] = ELECTRODE_1 if self.matrix[2][0] == NO_WIRE else COLLISION
+            self.matrix[2][4] = ELECTRODE_2 if self.matrix[2][4] == NO_WIRE else COLLISION
         elif orientation % 180 == 135:
-            self.matrix[0][0] = 2 if self.matrix[0][0] == 0 else 3
-            self.matrix[4][4] = 2 if self.matrix[4][4] == 0 else 3 
+            self.matrix[0][0] = ELECTRODE_1 if self.matrix[0][0] == NO_WIRE else COLLISION
+            self.matrix[4][4] = ELECTRODE_2 if self.matrix[4][4] == NO_WIRE else COLLISION 
+            
+        # add local goal to matrix
+        # TODO
 
     def is_collided(self):
         # detect if wire is in between the two electrodes. if not, electrodes must have collided
-        # TODO
-        
-        return 3 in self.matrix
+        if self.orientation % 180 == 0:
+            if np.sum(self.matrix[1:3,2]) == 0:
+                return True
+        elif self.orientation % 180 == 45:
+            if np.sum(self.matrix[1:3,1:3]) == 0:
+                return True
+        elif self.orientation % 180 == 90:
+            if np.sum(self.matrix[2,1:3]) == 0:
+                return True
+        elif self.orientation % 180 == 135:
+            if np.sum(self.matrix[2:4,1:3]) == 0:
+                return True
+        else:
+            return 3 in self.matrix
     
     def __str__(self) -> str:
         # replace 1 with "w", 2 with "e" and 3 with "c"
         matrix_str = np.array(self.matrix, dtype=str)
         matrix_str = np.where(matrix_str == "1.0", "w", matrix_str)
-        matrix_str = np.where(matrix_str == "2.0", "e", matrix_str)
+        matrix_str = np.where(matrix_str == "4.0", "e", matrix_str)
+        matrix_str = np.where(matrix_str == "5.0", "E", matrix_str)
         matrix_str = np.where(matrix_str == "3.0", "c", matrix_str)
         matrix_str = np.where(matrix_str == "0.0", " ", matrix_str)
         
