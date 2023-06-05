@@ -18,10 +18,9 @@ class Environment:
         self.pixel_to_mm_ratio = 1
         self.state = None
         self.image = image
-        self.old_positions = []
-        self.__current_target_position = None
-        self.__last_distance_to_target = None
-        self.__current_distance_to_target = None
+        self.__current_target_position = (0, 256)
+        self.__last_distance_to_target = 0
+        self.__current_distance_to_target = 0
         self.__old_targets = []
         self.__last_position = (0, 256)
         self.__first_action = True
@@ -64,25 +63,9 @@ class Environment:
         self.update_target()
         self.state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio, self.__current_target_position)
         self.__first_action = False
-        if not self.__first_action:
-            self.add_old_position(action)
         self.show_image()
 
         return False
-
-    def add_old_position(self, action):
-        if action == Action.TURN_LEFT or action == Action.TURN_RIGHT:
-            return
-
-        offsets = {
-            Action.RIGHT: [(-1, 0), (-1, 1), (-1, -1)],
-            Action.LEFT: [(1, 0), (1, 1), (1, -1)],
-            Action.UP: [(0, 1), (1, 1), (-1, 1)],
-            Action.DOWN: [(0, -1), (1, -1), (-1, -1)]
-        }
-
-        for offset in offsets[action]:
-            self.old_positions.append((self.position[0] + offset[0], self.position[1] + offset[1]))
 
 
     def reset_agent(self):
