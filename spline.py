@@ -42,7 +42,7 @@ def bspline(cv, n=100, degree=3, periodic=False):
     return np.array(si.splev(u, (kv,cv.T,degree))).T
 
 def spline(width, height):
-    cv = list(polyline_generator(6))
+    cv = list(polyline_generator(7))
     d=2
     p = bspline(cv,n=100,degree=d,periodic=False)
     x,y = p.T
@@ -52,13 +52,13 @@ def spline(width, height):
 
 
 if __name__ == '__main__':
-    cv = np.array(list(polyline_generator(6)))
-    plt.plot(cv.T[0], cv.T[1], 'o-', label='Control Points')
+    cv = np.array(list(polyline_generator(7)))
+    plt.plot(cv.T[0], cv.T[1], 'o-', label='Polyline Points')
     
     d=2
     p = bspline(cv,n=100,degree=d,periodic=False)
     x,y = p.T
-    plt.plot(x,y,'k-')
+    plt.plot(x,y,'r-', label='B-Spline Curve (degree='+str(d)+')')
 
     plt.minorticks_on()
     plt.legend()
@@ -68,3 +68,4 @@ if __name__ == '__main__':
     plt.ylim(0, 64)
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
+
