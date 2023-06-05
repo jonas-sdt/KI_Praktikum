@@ -7,6 +7,9 @@ from constants import *
 class State:
     def __init__(self, image, position: tuple, orientation: int, pixel_to_mm_ratio: float, local_goal_position: tuple):
         
+        if len(image.shape) != 2:
+            raise ValueError("Image must be a 2D array")
+                
         self.orientation = orientation
         
         roi_size = 50 # in mm
@@ -34,7 +37,7 @@ class State:
             roi_min_col = int(out_of_bounds_x_min)
             roi_max_col = int(roi_size - out_of_bounds_x_max)
 
-            roi[roi_min_row:roi_max_row, roi_min_col:roi_max_col] = image[roi_min_y if roi_min_y>=0 else 0:roi_max_y if roi_max_y<=image.shape[0] else image.shape[0], roi_min_x if roi_min_x>=0 else 0:roi_max_x if roi_max_x<=image.shape[1] else image.shape[1],0]
+            roi[roi_min_row:roi_max_row, roi_min_col:roi_max_col] = image[roi_min_y if roi_min_y>=0 else 0:roi_max_y if roi_max_y<=image.shape[0] else image.shape[0], roi_min_x if roi_min_x>=0 else 0:roi_max_x if roi_max_x<=image.shape[1] else image.shape[1]]
         else:
             roi = image[roi_min_y:roi_max_y, roi_min_x:roi_max_x]
 
@@ -136,9 +139,9 @@ def paint_state(img, position, orientation, pixel_to_mm_ratio, roi_size):
 if __name__ == "__main__":
     # test
     img = image_generator.generate_image(512,512)
-    state = State(img, (511,256), 0, 1)
+    state = State(img, (0,256), 0, 1, (1,256))
     hash = state.__hash__()
     print(state)
 
 
-    image_generator.show_image(paint_state(img, (512,256), 0, 1, 50))
+    image_generator.show_image(paint_state(img, (0,256), 0, 1, 50))

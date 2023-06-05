@@ -71,7 +71,6 @@ class QValueAlgorithm:
 
     def learn_training(self):
         image = image_generator.generate_image(512, 512)
-        image = image[:, :, 0] / 255                        # ? what is this doing
         self.learn_exec(image)
 
     def learn_exec(self, image):

@@ -49,7 +49,10 @@ class Environment:
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
         self.orientation = (self.orientation + action.value[2]) % 360
         self.image[self.position[0], self.position[1]] = self.image[self.position[0], self.position[1]] + AGENT
-        self.next_state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio)
+        
+        # ! placeholder. needs to be replaced with actual local goal
+        local_goal = (512, 256)
+        self.next_state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio, local_goal)
         self.__first_action = False
         self.show_image()
 
