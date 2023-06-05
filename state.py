@@ -1,5 +1,7 @@
 import numpy as np
-from image_generator import ImageGenerator
+import image_generator
+import cv2
+from constants import *
 # TODO: fix wire detection
 # TODO: implement fct for detecting out of bounds
 
@@ -10,10 +12,32 @@ class State:
         roi_size = 50 # in mm
         self.matrix = np.zeros((5,5))
         
-        # two different ways of getting the roi
-        roi = image[int(position[0]-roi_size/2*pixel_to_mm_ratio):int(position[0]+roi_size/2*pixel_to_mm_ratio),int(position[1]-roi_size/2*pixel_to_mm_ratio):int(position[1]+roi_size/2*pixel_to_mm_ratio)]
-        # roi = image[(position[0] - 2):(position[0]+2),(position[1] - 2):(position[1]+2)]
-        
+        # calculate indices of ROI
+        roi_min_x = int(position[0] - roi_size/2*pixel_to_mm_ratio)
+        roi_max_x = int(position[0] + roi_size/2*pixel_to_mm_ratio)
+        roi_min_y = int(position[1] - roi_size/2*pixel_to_mm_ratio)
+        roi_max_y = int(position[1] + roi_size/2*pixel_to_mm_ratio)
+
+        # check if ROI goes beyond image boundaries
+        if roi_min_x < 0 or roi_max_x > image.shape[1] or roi_min_y < 0 or roi_max_y > image.shape[0]:
+            roi = np.zeros((roi_size, roi_size))
+            
+            # calculate number of pixels that go beyond image boundaries
+            out_of_bounds_x_min = 0 if roi_min_x >= 0 else -roi_min_x
+            out_of_bounds_x_max = 0 if roi_max_x <= image.shape[1] else roi_max_x - image.shape[1]
+            out_of_bounds_y_min = 0 if roi_min_y >= 0 else -roi_min_y
+            out_of_bounds_y_max = 0 if roi_max_y <= image.shape[0] else roi_max_y - image.shape[0]
+            
+            # calculate indices of ROI for this row and column
+            roi_min_row = int(out_of_bounds_y_min)
+            roi_max_row = int(roi_size - out_of_bounds_y_max)
+            roi_min_col = int(out_of_bounds_x_min)
+            roi_max_col = int(roi_size - out_of_bounds_x_max)
+
+            roi[roi_min_row:roi_max_row, roi_min_col:roi_max_col] = image[roi_min_y if roi_min_y>=0 else 0:roi_max_y if roi_max_y<=image.shape[0] else image.shape[0], roi_min_x if roi_min_x>=0 else 0:roi_max_x if roi_max_x<=image.shape[1] else image.shape[1],0]
+        else:
+            roi = image[roi_min_y:roi_max_y, roi_min_x:roi_max_x]
+
         num_of_pixels_vert = roi.shape[0]
         num_of_pixels_hor = roi.shape[1]
         
@@ -21,8 +45,14 @@ class State:
         for row in range(5):
             for col in range(5):
 
+                # calculate indices of ROI for this row and column
+                roi_min_row = int(row*num_of_pixels_vert/5)
+                roi_max_row = int((row+1)*num_of_pixels_vert/5)
+                roi_min_col = int(col*num_of_pixels_hor/5)
+                roi_max_col = int((col+1)*num_of_pixels_hor/5)
+
                 # check if area in roi is wire
-                if np.sum(roi[int(row*num_of_pixels_vert/5):int((row+1)*num_of_pixels_vert/5)][int(col*num_of_pixels_hor/5):int((col+1)*num_of_pixels_hor/5)]) > 0:
+                if np.sum(roi[roi_min_row:roi_max_row, roi_min_col:roi_max_col]) > 0:
                     self.matrix[row][col] = 1
 
         if orientation % 180 == 0:
@@ -39,6 +69,9 @@ class State:
             self.matrix[4][4] = 2 if self.matrix[4][4] == 0 else 3 
 
     def is_collided(self):
+        # detect if wire is in between the two electrodes. if not, electrodes must have collided
+        # TODO
+        
         return 3 in self.matrix
     
     def __str__(self) -> str:
@@ -70,12 +103,27 @@ class State:
             return False
         return self.__hash__() == other.__hash__()
 
+def paint_state(img, position, orientation, pixel_to_mm_ratio, roi_size):
+    # paint square around position in image
+    roi_min_x = int(position[0] - roi_size/2*pixel_to_mm_ratio) if int(position[0] - roi_size/2*pixel_to_mm_ratio) > 0 else 0
+    roi_max_x = int(position[0] + roi_size/2*pixel_to_mm_ratio) if int(position[0] + roi_size/2*pixel_to_mm_ratio) < img.shape[0] else img.shape[0]
+    roi_min_y = int(position[1] - roi_size/2*pixel_to_mm_ratio) if int(position[1] - roi_size/2*pixel_to_mm_ratio) > 0 else 0
+    roi_max_y = int(position[1] + roi_size/2*pixel_to_mm_ratio) if int(position[1] + roi_size/2*pixel_to_mm_ratio) < img.shape[1] else img.shape[1]
+
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    roi = np.zeros((roi_max_y - roi_min_y, roi_max_x - roi_min_x, 3))
+    roi[:,:,0] = 255
+
+    img_rgb[roi_min_y:roi_max_y, roi_min_x:roi_max_x] = roi
+
+    return img_rgb
 
 if __name__ == "__main__":
     # test
-    img_gen  = ImageGenerator(512,512)
-    img = img_gen.generate_image()
-    state = State(img, (256,256), 0, 1)
+    img = image_generator.generate_image(512,512)
+    state = State(img, (511,256), 0, 1)
     hash = state.__hash__()
     print(state)
-    img_gen.show_image()
+
+
+    image_generator.show_image(paint_state(img, (512,256), 0, 1, 50))
