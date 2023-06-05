@@ -3,7 +3,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-def polyline_generator(n:int, x_range:tuple=(0,64), y_range:tuple=(0,64), distance_range:tuple=(12,42), angle_range:tuple=(-np.pi/1.5, np.pi/1.5)):
+def polyline_generator(n:int, x_range:tuple=(0,64), y_range:tuple=(0,64), distance_range:tuple=(12,42), angle_range:tuple=(-np.pi/2, np.pi/2)):
     x_min, x_max = x_range
     y_min, y_max = y_range
     
@@ -12,16 +12,16 @@ def polyline_generator(n:int, x_range:tuple=(0,64), y_range:tuple=(0,64), distan
     
     context = get_context()
     Point, Contour, Segment = context.point_cls, context.contour_cls, context.segment_cls
-    
-    # last points
-    last_points = [Point(int(x_max - (x_max-x_min)*0.1), int((y_max - y_min)/2)) , Point(x_max, int((y_max - y_min)/2))]
-    
+        
     # add first two points manually
-    points = [Point(x_min, int((y_max - y_min)/2)), Point(int(x_min + (x_max-x_min)*0.1), int((y_max - y_min)/2))]
+    points = [Point(x_min, int((y_max - y_min)/2))]
     yield [points[0].x, points[0].y]
-    yield [points[1].x, points[1].y]
     
-    while len(points)<=n-3:
+    for i in range(1,3):
+        points.append(Point(int(x_min + i), int((y_max - y_min)/2)))
+        yield [points[-1].x, points[-1].y]
+    
+    while len(points)<=n-2:
         
         # create point that gets appended to the polyline. Distance to previous point must in the range of
         # distance and angle between the previous to points to this point and the previous point must be in range of angle_range
@@ -53,10 +53,9 @@ def polyline_generator(n:int, x_range:tuple=(0,64), y_range:tuple=(0,64), distan
             yield [new_point.x, new_point.y]
     
     # add last two points manually
-    points.append(last_points[0])
-    points.append(last_points[1])
-    yield [last_points[0].x, last_points[0].y]
-    yield [last_points[1].x, last_points[1].y]
+    for i in range(2,-1,-1):
+        points.append(Point(int(x_max - i), int((y_max - y_min)/2)))
+        yield [points[-1].x, points[-1].y]
         
 if __name__=="__main__":
     for i in polyline_generator(6):
