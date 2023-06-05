@@ -37,8 +37,8 @@ class QValueAlgorithm:
         This method returns the action with the highest Q-value for the given state
         :param state:
         """
-        max_q_value = np.max(self.q_values[state])
-        max_q_value_indicex = np.where(self.q_values[state] == max_q_value)[0]
+        max_q_value = np.max(self.q_values[state.get_hash()])
+        max_q_value_indicex = np.where(self.q_values[state.get_hash()] == max_q_value)[0]
         return self.action_list[max_q_value_indicex[0]]
 
     def get_reward(self, environment, is_out_of_bounds=False):
@@ -65,9 +65,9 @@ class QValueAlgorithm:
         :param reward:
         """
         if state not in self.q_values:
-            self.q_values[state] = np.zeros(len(self.action_list))
+            self.q_values[state.get_hash()] = np.zeros(len(self.action_list))
 
-        self.q_values[state][self.action_list.index(action)] += self.alpha * (reward + self.gamma * np.max(self.q_values[state]) - self.q_values[state][self.action_list.index(action)])
+        self.q_values[state.get_hash()][self.action_list.index(action)] += self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]) - self.q_values[state.get_hash()][self.action_list.index(action)])
 
     def learn_exec(self, image):
         """

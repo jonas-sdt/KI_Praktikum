@@ -121,6 +121,10 @@ class State:
             return False
         return self.__hash__() == other.__hash__()
 
+    # Added, because we want to save only the matrix hash in the q table and not the instance itself
+    def get_hash(self):
+        return hash(self.matrix.data.tobytes())
+
 def paint_state(img, position, orientation, pixel_to_mm_ratio, roi_size):
     # paint square around position in image
     roi_min_x = int(position[0] - roi_size/2*pixel_to_mm_ratio) if int(position[0] - roi_size/2*pixel_to_mm_ratio) > 0 else 0
