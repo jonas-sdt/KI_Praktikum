@@ -2,8 +2,7 @@ import numpy as np
 import image_generator
 import cv2
 from constants import *
-# TODO: fix wire detection
-# TODO: implement fct for detecting out of bounds
+
 
 # For now the class still uses the old attributes. Change later, when the new attributes (nxn array) are implemented.
 class State:
