@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 from action import Action
 from constants import AGENT, WIRE, NO_WIRE, AGENT_ON_WIRE, AGENT_ON_NO_WIRE
-from state2 import State
+from state import State
 
 
 class Environment:
@@ -15,9 +15,8 @@ class Environment:
         self.position = (0, 256)  # TODO: Change to start position
         self.end_position = (512, 256)
         self.orientation = 0
-        self.current_state = None
         self.pixel_to_mm_ratio = 1
-        self.next_state = None
+        self.state = None
         self.image = image
         self.old_positions = []
         self.__last_position = (0, 256)
@@ -49,13 +48,22 @@ class Environment:
         if not self.__first_action:
             self.image[self.position[0], self.position[1]] = self.image[self.position[0], self.position[1]] - AGENT
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
+
+        # Check if the agent is out of bounds
+        if self.position[0] < 0 or self.position[0] >= self.image.shape[0] or self.position[1] < 0 or self.position[1] >= self.image.shape[1]:
+            self.position = self.__last_position
+            return True
+        self.__last_position = self.position
+
         self.orientation = (self.orientation + action.value[2]) % 360
         self.image[self.position[0], self.position[1]] = self.image[self.position[0], self.position[1]] + AGENT
-        self.next_state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio)
+        self.state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio)
         self.__first_action = False
         if not self.__first_action:
             self.add_old_position(action)
         self.show_image()
+
+        return False
 
     def add_old_position(self, action):
         if action == Action.TURN_LEFT or action == Action.TURN_RIGHT:
@@ -86,13 +94,3 @@ class Environment:
             return True
         else:
             return False
-
-    def reset_to_last_position(self):
-        self.position = self.__last_position
-
-    def save_last_position(self):
-        self.__last_position = self.position
-
-
-    def update_states(self):
-        self.current_state = self.next_state

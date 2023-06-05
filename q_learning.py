@@ -1,18 +1,18 @@
 import os
 import pickle
 import random
+import numpy as np
 
 import cv2
 
 from action import Action
 from environment import Environment
-import image_generator 
+import image_generator
 from dialogue import main as dialogue_main
 
 
 class QValueAlgorithm:
     def __init__(self):
-        self.__out_of_bounds = False
         self.q_values = {}
         self.epsilon = 1
         self.alpha = 0.3
@@ -21,110 +21,98 @@ class QValueAlgorithm:
         self.episodes = 1000
         self.action_number = 0
 
-    def get_reward(self, environment):
-        if self.__out_of_bounds:
+
+    def choose_action(self, state):
+        """
+        This method chooses an action based on the epsilon-greedy policy
+        :param state:
+        """
+        if random.random() < self.epsilon:
+            return random.choice(self.action_list)
+        else:
+            return self.get_best_action(state)
+
+    def get_best_action(self, state):
+        """
+        This method returns the action with the highest Q-value for the given state
+        :param state:
+        """
+        max_q_value = np.max(self.q_values[state])
+        max_q_value_indicex = np.where(self.q_values[state] == max_q_value)[0]
+        return self.action_list[max_q_value_indicex[0]]
+
+    def get_reward(self, state, is_out_of_bounds=False):
+        """
+        This method returns the reward for the given state, if collided return -100, if in position return 10, else return -2
+        :param state:
+        """
+
+        if is_out_of_bounds:
             return -100
 
-        if environment.next_state.is_collided():
-            environment.reset_to_last_position()
+        if state.is_collided():
             return -100
-        if environment.position in environment.old_positions:
-            return -10
+        # elif state.is_in_position():
+        #     return 10
         else:
-            environment.save_last_position()
-            return 2
+            return -2
 
-    def choose_action(self, environment):
-        if random.uniform(0, 1) < self.epsilon:
-            action = random.choice(self.action_list)
-        else:
-            action = self.get_best_action(environment)
+    def update_q_value(self, state, action, reward):
+        """
+        This method updates the Q-value for the given state-action pair
+        :param state:
+        :param action:
+        :param reward:
+        """
+        if state not in self.q_values:
+            self.q_values[state] = np.zeros(len(self.action_list))
 
-        self.check_action_validity(environment, action)
+        self.q_values[state][self.action_list.index(action)] += self.alpha * (reward + self.gamma * np.max(self.q_values[state]) - self.q_values[state][self.action_list.index(action)])
 
-        return action
+    def learn_exec(self, image):
+        """
+        This method executes the learning process
+        """
+        environment = Environment(image, 1)
+        state = environment.state
+        for episode in range(self.episodes):
+            while not environment.check_end_position() and not state.is_collided():
+                action = self.choose_action(state)
+                is_out = environment.do_action(action)
+                state = environment.state
+                reward = self.get_reward(state, is_out)
+                self.update_q_value(state, action, reward)
 
-    def get_q_value(self, environment, action):
-        if environment.current_state not in self.q_values:
-            self.q_values[environment.current_state] = [0] * len(self.action_list)
-        if environment.next_state not in self.q_values:
-            self.q_values[environment.next_state] = [0] * len(self.action_list)
+                if is_out:
+                    environment.reset_agent()
 
-        value = (1 - self.alpha) * self.q_values[environment.current_state][
-            self.action_list.index(action)] + self.alpha * (
-                        self.get_reward(environment) + self.gamma * max(self.q_values[environment.next_state]))
-        return value
+                self.action_number += 1
+                if self.action_number % 100 == 0:
+                    self.epsilon = self.epsilon * 0.99
+                    print("Epsilon: ", self.epsilon)
+                print("Action number: ", self.action_number)
+                print("Episode: ", episode)
+                print("State: ", state)
+                print("Action: ", action)
+                print("Reward: ", reward)
+                print("Q-values: ", self.q_values)
+                print("---------------------------------------------------")
+            environment = Environment(image, 1)
+            state = environment.state
+        with open('q_values.pickle', 'wb') as handle:
+            pickle.dump(self.q_values, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    def update_q_values(self, environment, action):
-        if environment.next_state not in self.q_values:
-            self.q_values[environment.next_state] = [0] * len(self.action_list)
 
-        self.q_values[environment.current_state][self.action_list.index(action)] = self.get_q_value(environment, action)
-
-    def check_action_validity(self, environment, action):
-        ROWS, COLS = environment.image.shape[:2]
-
-        if environment.position[0] == 0 and action == Action.LEFT:
-            self.__out_of_bounds = True
-        elif environment.position[0] == ROWS - 1 and action == Action.RIGHT:
-            self.__out_of_bounds = True
-        elif environment.position[1] == 0 and action == Action.UP:
-            self.__out_of_bounds = True
-        elif environment.position[1] == COLS - 1 and action == Action.DOWN:
-            self.__out_of_bounds = True
 
     def learn_training(self):
         image = image_generator.generate_image(512, 512)
-        image = image[:, :, 0] / 255                        # ? what is this doing
+        # Convert image from shape (512, 512, 1) to (512, 512)
+        image = image.reshape((512, 512))
         self.learn_exec(image)
 
-    def learn_exec(self, image):
-        environment = Environment(image, 1)
-        self.explore(environment)
+    def explore(self):
+        pass
 
-    def explore(self, environment):
-        for i in range(self.episodes):
-            environment.update_states()
-            while not environment.check_end_position():
-                action = self.choose_action(environment)
-                if self.__out_of_bounds:
-                    print("Invalid action, out of bounds")
-                    self.__out_of_bounds = False
-                    break
-                environment.do_action(action)
-                self.update_q_values(environment, action)
-                environment.update_states()
-
-                self.epsilon -= 0.01
-
-            self.epsilon = 1
-            print("Episode: " + str(i) + " finished. Position: " + str(environment.position))
-            environment.reset_agent()
-
-        print("Training finished")
-        print(self.q_values)
-        self.save_q_values()
-        self.show_q_values()
-
-    def get_best_action(self, environment):
-        best_action = None
-        best_q = float('-inf')
-        for action in self.action_list:
-            q_value = self.q_values.get(environment.current_state)[self.action_list.index(action)]
-            if q_value > best_q:
-                best_q = q_value
-                best_action = action
-
-        return best_action
-
-    def save_q_values(self):
-        pickle_file_path = os.getcwd() + "/q_values_finished.pickle"
-        with open(pickle_file_path, 'wb') as file:
-            pickle.dump(self.q_values, file)
-
-    def show_q_values(self):
-        for key, value in self.q_values.items():
-            print(key.state_matrix)
 
 
 if __name__ == '__main__':
