@@ -41,19 +41,19 @@ class QValueAlgorithm:
         max_q_value_indicex = np.where(self.q_values[state] == max_q_value)[0]
         return self.action_list[max_q_value_indicex[0]]
 
-    def get_reward(self, state, is_out_of_bounds=False):
+    def get_reward(self, environment, is_out_of_bounds=False):
         """
         This method returns the reward for the given state, if collided return -100, if in position return 10, else return -2
         :param state:
         """
-
+        state = environment.state
         if is_out_of_bounds:
             return -100
 
         if state.is_collided():
             return -100
-        # elif state.is_in_position():
-        #     return 10
+        elif environment.update_distance_to_target():
+            return 10
         else:
             return -2
 
@@ -80,7 +80,7 @@ class QValueAlgorithm:
                 action = self.choose_action(state)
                 is_out = environment.do_action(action)
                 state = environment.state
-                reward = self.get_reward(state, is_out)
+                reward = self.get_reward(environment, is_out)
                 self.update_q_value(state, action, reward)
 
                 if is_out:

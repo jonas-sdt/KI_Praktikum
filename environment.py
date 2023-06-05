@@ -19,6 +19,10 @@ class Environment:
         self.state = None
         self.image = image
         self.old_positions = []
+        self.__current_target_position = None
+        self.__last_distance_to_target = None
+        self.__current_distance_to_target = None
+        self.__old_targets = []
         self.__last_position = (0, 256)
         self.__first_action = True
         self.__do_four_steps()
@@ -57,7 +61,9 @@ class Environment:
 
         self.orientation = (self.orientation + action.value[2]) % 360
         self.image[self.position[0], self.position[1]] = self.image[self.position[0], self.position[1]] + AGENT
-        self.state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio)
+        is_closer = self.update_distance_to_target()
+        self.update_target()
+        self.state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio, self.__current_target_position)
         self.__first_action = False
         if not self.__first_action:
             self.add_old_position(action)
@@ -94,3 +100,66 @@ class Environment:
             return True
         else:
             return False
+
+    def update_target(self):
+        """
+        This method checks in a 5x5 area around the agent for the nearest pixel with the value WIRE
+        """
+        # If the target is already found, return
+        if self.position is not self.__current_target_position:
+            return
+
+        self.__old_targets.append(self.__current_target_position)
+
+        # Get the area around the agent
+        area = self.image[self.position[0] - 2:self.position[0] + 3, self.position[1] - 2:self.position[1] + 3]
+
+        # Get the indices of the pixels with the value WIRE
+        indices = np.where(area == WIRE)
+
+        # If there are no pixels with the value WIRE, return
+        if len(indices[0]) == 0:
+            return
+
+        indices = []
+        # Get the indeces of the pixel with the value WIRE that is in the area around the agent
+        for i in range(len(area)):
+            for j in range(len(area[i])):
+                if area[i][j] == WIRE:
+                    indices.append((i, j))
+
+        # Sort the indices according to the distance to the agent
+
+        indx_with_distance = {}
+        for index in indices:
+            distance = np.sqrt((index[0] - 2) ** 2 + (index[1] - 2) ** 2)
+            indx_with_distance[index] = distance
+
+        sorted_indices = sorted(indx_with_distance.items(), key=lambda x: x[1])
+
+
+        # Iterate over the indx_with_distance until there is an index that is not in the old targets
+        for index in sorted_indices:
+            pos = (self.position[0] - 2 + index[0][0], self.position[1] - 2 + index[0][1])
+            if pos not in self.__old_targets:
+                self.__current_target_position = pos
+                break
+
+        self.__current_distance_to_target = 0
+        self.__last_distance_to_target = self.__current_distance_to_target
+
+    def update_distance_to_target(self):
+        """
+        This method calculates the distance to the target
+        """
+        self.__current_distance_to_target = np.sqrt((self.position[0] - self.__current_target_position[0]) ** 2 + (self.position[1] - self.__current_target_position[1]) ** 2)
+        is_closer = self.__current_distance_to_target < self.__last_distance_to_target
+        self.__last_distance_to_target = self.__current_distance_to_target
+
+        return is_closer
+
+
+
+
+
+
