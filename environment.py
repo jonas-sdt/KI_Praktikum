@@ -61,7 +61,6 @@ class Environment:
 
         self.orientation = (self.orientation + action.value[2]) % 360
         self.image[self.position[0], self.position[1]] = self.image[self.position[0], self.position[1]] + AGENT
-        is_closer = self.update_distance_to_target()
         self.update_target()
         self.state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio, self.__current_target_position)
         self.__first_action = False
