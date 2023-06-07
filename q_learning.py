@@ -6,9 +6,11 @@ import numpy as np
 import cv2
 
 from action import Action
+from action import Options
 from environment import Environment
 import image_generator
 from dialogue import main as dialogue_main
+from execute_best import ExecuteBest
 
 
 class QValueAlgorithm:
@@ -20,6 +22,11 @@ class QValueAlgorithm:
         self.action_list = list(Action)
         self.episodes = 1000
         self.action_number = 0
+
+    def load_q_values(self):
+        pickle_file_path = os.getcwd() + "/q_values_finished.pickle"
+        with open(pickle_file_path, 'rb') as file:
+            self.q_values = pickle.load(file)
 
 
     def choose_action(self, state):
@@ -99,7 +106,7 @@ class QValueAlgorithm:
                 print("---------------------------------------------------")
             environment = Environment(image, 1)
             state = environment.state
-        with open('q_values.pickle', 'wb') as handle:
+        with open('q_values_finished.pickle', 'wb') as handle:
             pickle.dump(self.q_values, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -110,29 +117,38 @@ class QValueAlgorithm:
         image = image.reshape((512, 512))
         self.learn_exec(image)
 
-    def explore(self):
-        pass
-
-
 
 if __name__ == '__main__':
     q_value_algorithm = QValueAlgorithm()
-    decision = dialogue_main()
-    if decision:
+    decision, number_of_images = dialogue_main()
+    number_of_images = int(number_of_images)
+    print("Decision: ", decision)
+    if decision == Options.TRAINING_REAL.value:
         print("User chose to use real images")
         file_path = ""
         file_name = ""
         try:
             file_path = os.getcwd() + "/real_images"
             file_name = os.listdir(file_path)[0]
+            image = cv2.imread(file_path + "/" + file_name)
+            q_value_algorithm.learn_exec(image)
         except FileNotFoundError:
             print("File not found")
             exit(1)
 
         image = cv2.imread(file_path + "/" + file_name)
         q_value_algorithm.learn_exec(image)
-    elif not decision:
+    elif decision == Options.TRAINING_GENERATED.value:
         print("User chose to use generated images")
-        q_value_algorithm.learn_training()
+        if number_of_images <= 0:
+            raise ValueError("Number of images must be greater than 0")
+        for i in range(number_of_images):
+            if i > 0:
+                q_value_algorithm.load_q_values()
+            q_value_algorithm.learn_training()
+    elif decision == Options.EXECUTE_FINAL.value:
+        print("User chose to execute the final algorithm")
+        execute_best = ExecuteBest()
+        execute_best.execute()
     else:
         raise RuntimeError
