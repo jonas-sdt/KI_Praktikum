@@ -6,7 +6,7 @@ from action import Options
 class ChoiceDialog:
     def __init__(self, root):
         self.root = root
-        self.root.geometry("300x200")  # Set the window size
+        self.root.geometry("300x220")  # Set the window size
         self.root.title("Choice Dialog")  # Set the window title
         self.root.resizable(False, False)  # Disable window resizing
         self.root.configure(bg="white")  # Set background color
@@ -31,8 +31,9 @@ class ChoiceDialog:
         )
         self.option_menu.pack(fill=tk.X)
 
-        self.number_label = ttk.Label(self.main_frame, text="Enter a number:")
+        self.number_label = ttk.Label(self.main_frame, text="Enter number of training images:")
         self.number_entry = ttk.Entry(self.main_frame)
+        self.number_entry.insert(0, "1")
         self.ok_button = ttk.Button(self.main_frame, text="OK", command=self.close_window, state='disabled')
 
         self.choice = None
@@ -69,11 +70,13 @@ def main():
     choice_dialog = ChoiceDialog(root)
     choice_dialog.show_dialog()
 
-    if choice_dialog.choice:
-        message = f"Option: {choice_dialog.choice}\nEntered Number: {choice_dialog.entered_number}"
-        messagebox.showinfo("Decision", message)
-
     root.mainloop()
+    
+    if choice_dialog.choice is None:
+        messagebox.showerror("Error", "You must select an option")
+        exit(1)
+
+    return choice_dialog.choice, choice_dialog.entered_number
 
 
 if __name__ == "__main__":

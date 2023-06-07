@@ -8,3 +8,9 @@ class Action(Enum):
     DOWN = (0, 1, 0)
     TURN_LEFT = (0, 0, -45)
     TURN_RIGHT = (0, 0, 45)
+
+
+class Options(Enum):
+    TRAINING_GENERATED = "Train on generated data"
+    TRAINING_REAL = "Train on real data"
+    EXECUTE_FINAL = "Execute final model"
