@@ -114,7 +114,7 @@ class QValueAlgorithm:
     def learn_training(self):
         image = image_generator.generate_image(512, 512)
         # Convert image from shape (512, 512, 1) to (512, 512)
-        image = image.reshape((512, 512))
+        #image = image.reshape((512, 512))
         self.learn_exec(image)
 
 

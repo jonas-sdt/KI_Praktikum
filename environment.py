@@ -5,26 +5,32 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from action import Action
-from constants import AGENT, WIRE, NO_WIRE, AGENT_ON_WIRE, AGENT_ON_NO_WIRE
+from constants import WIRE
 from state import State
 
 
 class Environment:
     def __init__(self, image: np.array, pixel_to_mm_ratio):
         cv2.namedWindow("display", cv2.WINDOW_NORMAL)
-        self.position = (0, 256)  # TODO: Change to start position
-        self.end_position = (512, 256)
+        # self.position = (0, 256)  # TODO: Change to start position
+        self.position = (256, 0)  # TODO: Change to start position
+        # self.end_position = (512, 256)
+        self.end_position = (256, 512)
         self.orientation = 0
         self.pixel_to_mm_ratio = 1
-        self.state = None
         self.image = image
-        self.__current_target_position = (0, 256)
+        # self.__current_target_position = (0, 256)
+        self.__current_target_position = (256, 0)
+        self.state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio,
+                           self.__current_target_position)
         self.__last_distance_to_target = 0
         self.__current_distance_to_target = 0
         self.__old_targets = []
-        self.__last_position = (0, 256)
+        # self.__last_position = (0, 256)
+        self.__last_position = (256, 0)
         self.__first_action = True
-        self.__do_four_steps()
+        self.update_target()
+        #self.__do_four_steps()
 
     def __do_four_steps(self):
         self.do_action(Action.RIGHT)
@@ -39,7 +45,8 @@ class Environment:
         marked_image = cv2.normalize(marked_image, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
         # Convert the image to RGB
         marked_image = cv2.cvtColor(marked_image, cv2.COLOR_GRAY2RGB)
-        marked_image = cv2.circle(marked_image, self.position, radius=0, color=(0, 0, 255), thickness=2)
+        image_position = (self.position[1], self.position[0])
+        marked_image = cv2.circle(marked_image, image_position, radius=0, color=(0, 0, 255), thickness=2)
         # Show the image
         cv2.imshow('display', marked_image)
         # Update the window
@@ -48,8 +55,6 @@ class Environment:
     def do_action(self, action):
         # action is a tuple of (x, y, orientation)
         print("Action: ", action)
-        if not self.__first_action:
-            self.image[self.position[0], self.position[1]] = self.image[self.position[0], self.position[1]] - AGENT
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
 
         # Check if the agent is out of bounds
@@ -59,7 +64,6 @@ class Environment:
         self.__last_position = self.position
 
         self.orientation = (self.orientation + action.value[2]) % 360
-        self.image[self.position[0], self.position[1]] = self.image[self.position[0], self.position[1]] + AGENT
         self.update_target()
         self.state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio, self.__current_target_position)
         self.__first_action = False
@@ -69,12 +73,13 @@ class Environment:
 
 
     def reset_agent(self):
-        self.position = (0, 256)  # TODO: Change to start position
+        # self.position = (0, 256)  # TODO: Change to start position
+        self.position = (256, 0)  # TODO: Change to start position
         self.orientation = 0
         # self.image[self.position[0], self.position[1]] = AGENT
         # self.do_action(Action.RIGHT)
         # self.do_action(Action.RIGHT)
-        self.__do_four_steps()
+        #self.__do_four_steps()
 
     def check_end_position(self):
         if self.position[0] == self.end_position[0] - 2 and self.position[1] == self.end_position[1]:
@@ -88,13 +93,26 @@ class Environment:
         This method checks in a 5x5 area around the agent for the nearest pixel with the value WIRE
         """
         # If the target is already found, return
-        if self.position is not self.__current_target_position:
+        if self.position != self.__current_target_position:
             return
 
         self.__old_targets.append(self.__current_target_position)
 
-        # Get the area around the agent
-        area = self.image[self.position[0] - 2:self.position[0] + 3, self.position[1] - 2:self.position[1] + 3]
+        area = np.zeros((5, 5))
+
+        # WHY DID X AND Y CHANGE PLACES HERE?
+
+        for i in range(5):
+            for j in range(5):
+                # Check if value is out of bounds
+                if self.position[0] - 2 + i < 0 or self.position[0] - 2 + i >= self.image.shape[0] or self.position[1] - 2 + j < 0 or self.position[1] - 2 + j >= self.image.shape[1]:
+                    area[i][j] = 0
+                else:
+                    area[i][j] = self.image[self.position[0] - 2 + i, self.position[1] - 2 + j]
+
+
+        # # Get the area around the agent
+        # area = self.image[self.position[0] - 2:self.position[0] + 3, self.position[1] - 2:self.position[1] + 3]
 
         # Get the indices of the pixels with the value WIRE
         indices = np.where(area == WIRE)
@@ -129,6 +147,8 @@ class Environment:
 
         self.__current_distance_to_target = 0
         self.__last_distance_to_target = self.__current_distance_to_target
+
+        print("Old target removed: ", self.__old_targets[-1], " New target: ", self.__current_target_position)
 
     def update_distance_to_target(self):
         """
