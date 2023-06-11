@@ -5,6 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from action import Action
+from action import Distance
 from constants import WIRE
 from state import State
 
@@ -15,7 +16,7 @@ class Environment:
         # self.position = (0, 256)  # TODO: Change to start position
         self.position = (256, 0)  # TODO: Change to start position
         # self.end_position = (512, 256)
-        self.end_position = (256, 512)
+        self.end_position = (256, 511)
         self.orientation = 0
         self.pixel_to_mm_ratio = 1
         self.image = image
@@ -25,7 +26,8 @@ class Environment:
                            self.__current_target_position)
         self.__last_distance_to_target = 0
         self.__current_distance_to_target = 0
-        self.__old_targets = []
+        self.old_targets = []
+        self.old_target_reached = False
         # self.__last_position = (0, 256)
         self.__last_position = (256, 0)
         self.__first_action = True
@@ -54,7 +56,7 @@ class Environment:
 
     def do_action(self, action):
         # action is a tuple of (x, y, orientation)
-        print("Action: ", action)
+        # print("Action: ", action)
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
 
         # Check if the agent is out of bounds
@@ -82,8 +84,7 @@ class Environment:
         #self.__do_four_steps()
 
     def check_end_position(self):
-        if self.position[0] == self.end_position[0] - 2 and self.position[1] == self.end_position[1]:
-            self.__do_four_steps()
+        if self.position == self.end_position or self.position == (self.end_position[0] - 1, self.end_position[1]):
             return True
         else:
             return False
@@ -94,13 +95,12 @@ class Environment:
         """
         # If the target is already found, return
         if self.position != self.__current_target_position:
+            self.old_target_reached = False
             return
 
-        self.__old_targets.append(self.__current_target_position)
+        self.old_targets.append(self.__current_target_position)
 
         area = np.zeros((5, 5))
-
-        # WHY DID X AND Y CHANGE PLACES HERE?
 
         for i in range(5):
             for j in range(5):
@@ -141,24 +141,32 @@ class Environment:
         # Iterate over the indx_with_distance until there is an index that is not in the old targets
         for index in sorted_indices:
             pos = (self.position[0] - 2 + index[0][0], self.position[1] - 2 + index[0][1])
-            if pos not in self.__old_targets:
+            if pos not in self.old_targets:
                 self.__current_target_position = pos
                 break
 
         self.__current_distance_to_target = 0
         self.__last_distance_to_target = self.__current_distance_to_target
-
-        print("Old target removed: ", self.__old_targets[-1], " New target: ", self.__current_target_position)
+        self.old_target_reached = True
+        # print("Old target removed: ", self.old_targets[-1], " New target: ", self.__current_target_position)
 
     def update_distance_to_target(self):
         """
         This method calculates the distance to the target
         """
         self.__current_distance_to_target = np.sqrt((self.position[0] - self.__current_target_position[0]) ** 2 + (self.position[1] - self.__current_target_position[1]) ** 2)
-        is_closer = self.__current_distance_to_target < self.__last_distance_to_target
+        value_to_return = None
+
+        if self.__current_distance_to_target < self.__last_distance_to_target:
+            value_to_return = Distance.CLOSER
+        elif self.__current_distance_to_target > self.__last_distance_to_target:
+            value_to_return = Distance.FARTHER
+        else:
+            value_to_return = Distance.SAME
+
         self.__last_distance_to_target = self.__current_distance_to_target
 
-        return is_closer
+        return value_to_return
 
 
 

@@ -13,7 +13,8 @@ class ExecuteBest:
         # Get the first element from the real_images folder
         self.action_list = list(Action)
         path = os.path.join(os.getcwd(), "real_images")
-        self.image = os.listdir(path)[0]
+        self.image = cv2.imread(os.path.join(path, os.listdir(path)[0]), cv2.IMREAD_GRAYSCALE)
+        self.image = self.image / 255
         self.all_positions = []
         self.all_actions = []
         self.environment = Environment(self.image, 1)

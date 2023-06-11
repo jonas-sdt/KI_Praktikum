@@ -26,11 +26,15 @@ class TestEnvironment():
 
     def test_target_position(self):
         assert self.environment._Environment__current_target_position == (256, 1)
+        print(self.environment.state)
         self.environment.do_action(Action.RIGHT)
+        print(self.environment.state)
         assert self.environment._Environment__current_target_position == (256, 2)
         self.environment.do_action(Action.RIGHT)
+        print(self.environment.state)
         assert self.environment._Environment__current_target_position == (257, 3)
         self.environment.do_action(Action.DOWN)
+        print(self.environment.state)
         assert self.environment._Environment__current_target_position == (257, 3)
         self.environment.do_action(Action.RIGHT)
         assert self.environment._Environment__current_target_position == (258, 4)
@@ -38,6 +42,11 @@ class TestEnvironment():
         assert self.environment._Environment__current_target_position == (258, 4)
         self.environment.do_action(Action.DOWN)
         assert self.environment._Environment__current_target_position == (258, 5)
+        self.environment.do_action(Action.DOWN)
+        self.environment.do_action(Action.DOWN)
+        self.environment.do_action(Action.DOWN)
+        self.environment.do_action(Action.DOWN)
+        print(self.environment.state.is_collided())
 
 
 if __name__ == '__main__':
