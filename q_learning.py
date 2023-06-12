@@ -21,7 +21,7 @@ class QValueAlgorithm:
         self.alpha = 0.3
         self.gamma = 0.9
         self.action_list = list(Action)
-        self.episodes = 1000
+        self.episodes = 5
         self.action_number = 0
         atexit.register(self.exit_handler)
 
@@ -63,7 +63,7 @@ class QValueAlgorithm:
             environment.position = environment.old_targets[-1]
             return -100
         elif environment.old_target_reached:
-            return 10
+            return 50
 
         distance_update = environment.update_distance_to_target()
 
@@ -74,18 +74,23 @@ class QValueAlgorithm:
         else:
             return -2
 
-    def update_q_value(self, state, action, reward):
+    def update_q_value(self, state, action, reward, state_new):
         """
         This method updates the Q-value for the given state-action pair
         :param state:
         :param action:
         :param reward:
         """
-        if state not in self.q_values:
+        if state.get_hash() not in self.q_values:
             self.q_values[state.get_hash()] = np.zeros(len(self.action_list))
 
+        if state_new.get_hash() not in self.q_values:
+            self.q_values[state_new.get_hash()] = np.zeros(len(self.action_list))
+
         # self.q_values[state.get_hash()][self.action_list.index(action)] += self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]) - self.q_values[state.get_hash()][self.action_list.index(action)])
-        self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * self.q_values[state.get_hash()][self.action_list.index(action)] + self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]))
+        #self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * self.q_values[state.get_hash()][self.action_list.index(action)] + self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]))
+
+        self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * self.q_values[state.get_hash()][self.action_list.index(action)] + self.alpha * (reward + self.gamma * np.max(self.q_values[state_new.get_hash()]))
 
     def learn_exec(self, image):
         """
@@ -97,13 +102,16 @@ class QValueAlgorithm:
             while not environment.check_end_position():
                 action = self.choose_action(state)
                 is_out = environment.do_action(action)
-                state = environment.state
+                state_new = environment.state
                 reward = self.get_reward(environment, is_out)
-                self.update_q_value(state, action, reward)
+                self.update_q_value(state, action, reward, state_new)
+
 
                 if is_out:
                     #environment.reset_agent()
                     environment.position = environment.old_targets[-1]
+
+                state = state_new
 
                 self.action_number += 1
                 if self.action_number % 100 == 0:
