@@ -6,7 +6,9 @@ from constants import *
 # For now the class still uses the old attributes. Change later, when the new attributes (nxn array) are implemented.
 class State:
     def __init__(self, image, position: tuple, orientation: int, pixel_to_mm_ratio: float, local_goal_position: tuple):
-        
+
+        position = (int(position[1]), int(position[0])) # I did little "pfusch" here, because I don't want to change the whole code :D
+
         if len(image.shape) != 2:
             raise ValueError("Image must be a 2D array")
                 
@@ -127,6 +129,10 @@ class State:
         if not isinstance(other, State):
             return False
         return self.__hash__() == other.__hash__()
+
+    # Added, because we want to save only the matrix hash in the q table and not the instance itself
+    def get_hash(self):
+        return hash(self.matrix.data.tobytes())
 
 def paint_state(img, position, orientation, pixel_to_mm_ratio, roi_size):
     # paint square around position in image
