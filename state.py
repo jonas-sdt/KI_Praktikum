@@ -11,7 +11,8 @@ class State:
             raise ValueError("Image must be a 2D array")
                 
         self.orientation = orientation
-        
+        self.local_goal_reached = position == local_goal_position
+
         roi_size = 50 # in mm
         self.matrix = np.zeros((5,5))
         
@@ -72,10 +73,12 @@ class State:
             self.matrix[4][4] = ELECTRODE_2 if self.matrix[4][4] == NO_WIRE else COLLISION 
             
         # add local goal to matrix
-        # TODO
+        local_goal_position_roi = (local_goal_position[0]-position[0]+25, local_goal_position[1]-position[1]+25)
+        local_goal_position_matrix = (int(local_goal_position_roi[0]/(roi_size/5)), int(local_goal_position_roi[1]/(roi_size/5)))
+        self.matrix[local_goal_position_matrix[1]][local_goal_position_matrix[0]] = LOCAL_GOAL
 
     def is_collided(self):
-        # detect if wire is in between the two electrodes. if not, electrodes must have collided
+        # detect if wire is in between the two electrodes. if not, electrodes must have collided with wire
         if self.orientation % 180 == 0:
             if np.sum(self.matrix[1:3,2]) == 0:
                 return True
@@ -90,14 +93,18 @@ class State:
                 return True
         else:
             return 3 in self.matrix
+        
+    def is_local_goal_reached(self):
+        return self.local_goal_reached
     
     def __str__(self) -> str:
         # replace 1 with "w", 2 with "e" and 3 with "c"
         matrix_str = np.array(self.matrix, dtype=str)
-        matrix_str = np.where(matrix_str == "1.0", "w", matrix_str)
-        matrix_str = np.where(matrix_str == "4.0", "e", matrix_str)
-        matrix_str = np.where(matrix_str == "5.0", "E", matrix_str)
-        matrix_str = np.where(matrix_str == "3.0", "c", matrix_str)
+        matrix_str = np.where(matrix_str == str(float(WIRE)), "w", matrix_str)
+        matrix_str = np.where(matrix_str == str(float(ELECTRODE_1)), "e", matrix_str)
+        matrix_str = np.where(matrix_str == str(float(ELECTRODE_2)), "E", matrix_str)
+        matrix_str = np.where(matrix_str == str(float(COLLISION)), "c", matrix_str)
+        matrix_str = np.where(matrix_str == str(float(LOCAL_GOAL)), "L", matrix_str)
         matrix_str = np.where(matrix_str == "0.0", " ", matrix_str)
         
         print_str = ""
@@ -139,7 +146,7 @@ def paint_state(img, position, orientation, pixel_to_mm_ratio, roi_size):
 if __name__ == "__main__":
     # test
     img = image_generator.generate_image(512,512)
-    state = State(img, (0,256), 0, 1, (1,256))
+    state = State(img, (0,256), 0, 1, (20,240))
     hash = state.__hash__()
     print(state)
 
