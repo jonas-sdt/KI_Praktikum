@@ -5,6 +5,7 @@ import numpy as np
 import atexit
 
 import cv2
+import pandas as pd
 
 from action import Action, Distance
 from action import Options
@@ -26,9 +27,19 @@ class QValueAlgorithm:
         atexit.register(self.exit_handler)
 
     def load_q_values(self):
-        pickle_file_path = os.getcwd() + "/q_values_finished.pickle"
-        with open(pickle_file_path, 'rb') as file:
-            self.q_values = pickle.load(file)
+        # Reading the CSV file into a DataFrame
+        csv_file = os.getcwd() + "/q_values_finished.csv"
+        df = pd.read_csv(csv_file, index_col=0)
+
+        # Converting the DataFrame back to a dictionary where the keys are the states and the values are the Q-values
+        q_values = df.T.to_dict('list')
+
+        # Converting the values from lists to numpy arrays
+        for key, value in q_values.items():
+            q_values[key] = np.array(value)
+
+        self.q_values = q_values
+
 
 
     def choose_action(self, state):
@@ -96,6 +107,9 @@ class QValueAlgorithm:
         """
         This method executes the learning process
         """
+
+        orientations = []
+
         environment = Environment(image, 1)
         state = environment.state
         for episode in range(self.episodes):
@@ -124,11 +138,14 @@ class QValueAlgorithm:
                 # print("Reward: ", reward)
                 # print("Q-values: ", self.q_values)
                 # print("---------------------------------------------------")
+                if environment.orientation not in orientations:
+                    orientations.append(environment.orientation)
+
             environment = Environment(image, 1)
+            print("Orientations: ", orientations)
             state = environment.state
             print("Episode: ", episode)
-        with open('q_values_finished.pickle', 'wb') as handle:
-            pickle.dump(self.q_values, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        self.save_q_values()
 
 
 
@@ -138,10 +155,16 @@ class QValueAlgorithm:
         #image = image.reshape((512, 512))
         self.learn_exec(image)
 
+    def save_q_values(self):
+        # Converting the dictionary to a DataFrame
+        df = pd.DataFrame.from_dict(self.q_values, orient='index')
+        df.columns = self.action_list
+        # Saving the DataFrame to a csv file
+        df.to_csv("q_values_finished.csv")
+
     def exit_handler(self):
         print("Saving q_values")
-        with open('q_values_finished.pickle', 'wb') as handle:
-            pickle.dump(self.q_values, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        self.save_q_values()
 
 
 if __name__ == '__main__':

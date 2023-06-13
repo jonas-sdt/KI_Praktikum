@@ -49,6 +49,13 @@ class Environment:
         marked_image = cv2.cvtColor(marked_image, cv2.COLOR_GRAY2RGB)
         image_position = (self.position[1], self.position[0])
         marked_image = cv2.circle(marked_image, image_position, radius=0, color=(0, 0, 255), thickness=2)
+
+        # Add a line to the image to show the orientation of the agent
+        # Calculate the end point of the line
+        end_point = (int(image_position[0] + 10 * np.cos(np.deg2rad(self.orientation))),
+                        int(image_position[1] + 10 * np.sin(np.deg2rad(self.orientation))))
+        marked_image = cv2.line(marked_image, image_position, end_point, color=(0, 0, 255), thickness=1)
+
         # Show the image
         cv2.imshow('display', marked_image)
         # Update the window

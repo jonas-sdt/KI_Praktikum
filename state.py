@@ -3,6 +3,9 @@ import image_generator
 import cv2
 from constants import *
 from scipy.interpolate import interp1d
+import os
+
+os.environ["PYTHONHASHSEED"] = "42"
 
 # For now the class still uses the old attributes. Change later, when the new attributes (nxn array) are implemented.
 class State:
@@ -22,30 +25,51 @@ class State:
                 else:
                     self.matrix[i][j] = self.image[position[0] - 2 + i, position[1] - 2 + j]
 
-        if orientation == 0:
-            self.matrix[0][2] = self.matrix[0][2] + ELECTRODE_1
-            self.matrix[4][2] = self.matrix[4][2] + ELECTRODE_2
-        elif orientation == 45:
-            self.matrix[0][0] = self.matrix[0][0] + ELECTRODE_1
-            self.matrix[4][4] = self.matrix[4][4] + ELECTRODE_2
-        elif orientation == 90:
-            self.matrix[2][0] = self.matrix[2][0] + ELECTRODE_1
-            self.matrix[2][4] = self.matrix[2][4] + ELECTRODE_2
-        elif orientation == 135:
-            self.matrix[4][0] = self.matrix[4][0] + ELECTRODE_1
-            self.matrix[0][4] = self.matrix[0][4] + ELECTRODE_2
-        elif orientation == 180:
-            self.matrix[4][2] = self.matrix[4][2] + ELECTRODE_1
-            self.matrix[0][2] = self.matrix[0][2] + ELECTRODE_2
-        elif orientation == 225:
-            self.matrix[4][4] = self.matrix[4][4] + ELECTRODE_1
-            self.matrix[0][0] = self.matrix[0][0] + ELECTRODE_2
-        elif orientation == 270:
-            self.matrix[2][4] = self.matrix[2][4] + ELECTRODE_1
-            self.matrix[2][0] = self.matrix[2][0] + ELECTRODE_2
-        elif orientation == 315:
-            self.matrix[0][4] = self.matrix[0][4] + ELECTRODE_1
-            self.matrix[4][0] = self.matrix[4][0] + ELECTRODE_2
+        # if orientation == 0:
+        #     self.matrix[0][2] = self.matrix[0][2] + ELECTRODE_1
+        #     self.matrix[4][2] = self.matrix[4][2] + ELECTRODE_2
+        # elif orientation == 45:
+        #     self.matrix[0][0] = self.matrix[0][0] + ELECTRODE_1
+        #     self.matrix[4][4] = self.matrix[4][4] + ELECTRODE_2
+        # elif orientation == 90:
+        #     self.matrix[2][0] = self.matrix[2][0] + ELECTRODE_1
+        #     self.matrix[2][4] = self.matrix[2][4] + ELECTRODE_2
+        # elif orientation == 135:
+        #     self.matrix[4][0] = self.matrix[4][0] + ELECTRODE_1
+        #     self.matrix[0][4] = self.matrix[0][4] + ELECTRODE_2
+        # elif orientation == 180:
+        #     self.matrix[4][2] = self.matrix[4][2] + ELECTRODE_1
+        #     self.matrix[0][2] = self.matrix[0][2] + ELECTRODE_2
+        # elif orientation == 225:
+        #     self.matrix[4][4] = self.matrix[4][4] + ELECTRODE_1
+        #     self.matrix[0][0] = self.matrix[0][0] + ELECTRODE_2
+        # elif orientation == 270:
+        #     self.matrix[2][4] = self.matrix[2][4] + ELECTRODE_1
+        #     self.matrix[2][0] = self.matrix[2][0] + ELECTRODE_2
+        # elif orientation == 315:
+        #     self.matrix[0][4] = self.matrix[0][4] + ELECTRODE_1
+        #     self.matrix[4][0] = self.matrix[4][0] + ELECTRODE_2
+        facing_angle = (orientation + 45) % 360
+
+        # Mapping of facing angles to matrix indices
+        angle_mapping = {
+            0: [(0, 2), (4, 2)],
+            45: [(0, 0), (4, 4)],
+            90: [(2, 0), (2, 4)],
+            135: [(4, 0), (0, 4)],
+            180: [(4, 2), (0, 2)],
+            225: [(4, 4), (0, 0)],
+            270: [(2, 4), (2, 0)],
+            315: [(0, 4), (4, 0)]
+        }
+
+        # Perform actions based on facing angle
+        for angle, indices in angle_mapping.items():
+            if facing_angle == angle:
+                self.matrix[indices[0][0]][indices[0][1]] += ELECTRODE_1
+                self.matrix[indices[1][0]][indices[1][1]] += ELECTRODE_2
+                break
+
 
         # print(self.matrix)
 
@@ -59,21 +83,18 @@ class State:
         if (len(electrode1_pos[0]) == 0 or len(electrode2_pos[0]) == 0):
             return False
 
+        facing_angle = (self.orientation + 45) % 360
+
         interpolated_points = []
-
-        orientation_patterns = {
-            0: [(i, 2) for i in range(5)],
-            45: [(i, i) for i in range(5)],
-            90: [(2, i) for i in range(5)],
-            135: [(4 - i, i) for i in range(5)],
-            180: [(4, 2 - i) for i in range(5)],
-            225: [(4 - i, 4 - i) for i in range(5)],
-            270: [(2, 4 - i) for i in range(5)],
-            315: [(i, 4 - i) for i in range(5)]
-        }
-
-        if self.orientation in orientation_patterns:
-            interpolated_points = orientation_patterns[self.orientation]
+        if self.orientation == 0 or self.orientation == 0 + 180:
+            interpolated_points = [(0, 2), (1, 2), (2, 2)]
+        elif facing_angle == 45 or facing_angle == 45 + 180:
+            # Interpolate between the two electrode points
+            interpolated_points = [(1, 1), (1, 2), (2, 1), (2, 2), (2, 3), (3, 2), (3, 3)]
+        elif facing_angle == 90 or facing_angle == 90 + 180:
+            interpolated_points = [(2, 0), (2, 1), (2, 2)]
+        elif facing_angle == 135 or facing_angle == 135 + 180:
+            interpolated_points = [(1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2)]
 
         wire_present = False
 
