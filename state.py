@@ -12,7 +12,7 @@ os.environ["PYTHONHASHSEED"] = "42"
 # For now the class still uses the old attributes. Change later, when the new attributes (nxn array) are implemented.
 class State:
     def __init__(self, image, position: tuple, orientation: int, local_goal_position: tuple, segmented_image):
-        self.image = image.copy()
+        self.image = segmented_image.copy()
         self.matrix = np.zeros((5, 5))
         self.orientation = orientation
         self.local_goal_position = local_goal_position
@@ -57,32 +57,14 @@ class State:
 
     def is_collided(self):
         # Find the positions of ELECTRODE_1 and ELECTRODE_2
-        electrode1_pos = np.where(self.matrix == ELECTRODE_1)
-        electrode2_pos = np.where(self.matrix == ELECTRODE_2)
+        electrode1_pos = np.where(self.matrix == ELECTRODE_1 + 3)
+        electrode2_pos = np.where(self.matrix == ELECTRODE_2 + 4)
 
-        if (len(electrode1_pos[0]) == 0 or len(electrode2_pos[0]) == 0):
+        if len(electrode1_pos[0]) == 0 or len(electrode2_pos[0]) == 0:
+            return True
+        else:
             return False
 
-        # get the positions of the electrodes in the image
-        e1_x_diff = electrode1_pos[0][0] - 2
-        e1_y_diff = electrode1_pos[1][0] - 2
-
-        e2_x_diff = electrode2_pos[0][0] - 2
-        e2_y_diff = electrode2_pos[1][0] - 2
-
-        # get the positions of the electrodes in the image
-        e1_x = self.position[0] + e1_x_diff
-        e1_y = self.position[1] + e1_y_diff
-
-        e2_x = self.position[0] + e2_x_diff
-        e2_y = self.position[1] + e2_y_diff
-
-        e1_value = self.segmented_image[e1_x, e1_y]
-        e2_value = self.segmented_image[e2_x, e2_y]
-
-        no_collision = e1_value == 3 and e2_value == 4
-
-        return not no_collision
 
 
     # Added, because we want to save only the matrix hash in the q table and not the instance itself
