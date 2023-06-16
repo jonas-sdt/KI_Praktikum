@@ -11,12 +11,13 @@ os.environ["PYTHONHASHSEED"] = "42"
 
 # For now the class still uses the old attributes. Change later, when the new attributes (nxn array) are implemented.
 class State:
-    def __init__(self, image, position: tuple, orientation: int, local_goal_position: tuple):
+    def __init__(self, image, position: tuple, orientation: int, local_goal_position: tuple, segmented_image):
         self.image = image.copy()
         self.matrix = np.zeros((5, 5))
         self.orientation = orientation
         self.local_goal_position = local_goal_position
-
+        self.segmented_image = segmented_image
+        self.position = position
         # mark the local goal position in the image
         self.image[local_goal_position] = LOCAL_GOAL
 
@@ -62,27 +63,27 @@ class State:
         if (len(electrode1_pos[0]) == 0 or len(electrode2_pos[0]) == 0):
             return False
 
-        is_collision = True
-        interpolated_points = []
+        # get the positions of the electrodes in the image
+        e1_x_diff = electrode1_pos[0][0] - 2
+        e1_y_diff = electrode1_pos[1][0] - 2
 
-        if self.orientation == 0 or self.orientation == 180:
-            interpolated_points = [(1, 2), (2, 2), (3, 2)]
-        elif self.orientation == 45 or self.orientation == 225:
-            interpolated_points = [(1, 1), (2, 2), (3, 3), (1, 2), (2, 1), (2, 3), (3, 2)]
-        elif self.orientation == 90 or self.orientation == 270:
-            interpolated_points = [(2, 1), (2, 2), (2, 3)]
-        elif self.orientation == 135 or self.orientation == 315:
-            interpolated_points = [(1, 3), (2, 2), (3, 1), (1, 2), (2, 1), (2, 3), (3, 2)]
+        e2_x_diff = electrode2_pos[0][0] - 2
+        e2_y_diff = electrode2_pos[1][0] - 2
 
-        for point in interpolated_points:
-            row = point[0]
-            col = point[1]
+        # get the positions of the electrodes in the image
+        e1_x = self.position[0] + e1_x_diff
+        e1_y = self.position[1] + e1_y_diff
 
-            if self.matrix[row][col] == 1:
-                is_collision = False
-                break
+        e2_x = self.position[0] + e2_x_diff
+        e2_y = self.position[1] + e2_y_diff
 
-        return is_collision
+        e1_value = self.segmented_image[e1_x, e1_y]
+        e2_value = self.segmented_image[e2_x, e2_y]
+
+        no_collision = e1_value == 3 and e2_value == 4
+
+        return not no_collision
+
 
     # Added, because we want to save only the matrix hash in the q table and not the instance itself
     def get_hash(self):

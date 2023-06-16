@@ -3,8 +3,9 @@ import numpy as np
 
 from action import Action
 from action import Distance
-from constants import WIRE
+from constants import WIRE, NO_WIRE
 from state import State
+from skimage import segmentation
 
 
 class Environment:
@@ -18,8 +19,11 @@ class Environment:
 
         self.image = image
 
+        self.segmented_image = image.copy()
+        self.segment_image()
+
         self.__current_target_position = (256, 0)
-        self.state = State(self.image, self.position, self.orientation, self.__current_target_position)
+        self.state = State(self.image, self.position, self.orientation, self.__current_target_position, self.segmented_image)
         self.__last_distance_to_target = 0
         self.__current_distance_to_target = 0
         self.old_targets = []
@@ -68,7 +72,7 @@ class Environment:
 
         self.orientation = (self.orientation + action.value[2]) % 360
         self.update_target()
-        self.state = State(self.image, self.position, self.orientation, self.__current_target_position)
+        self.state = State(self.image, self.position, self.orientation, self.__current_target_position, self.segmented_image)
         self.__first_action = False
         self.show_image()
 
@@ -158,3 +162,7 @@ class Environment:
         self.__last_distance_to_target = self.__current_distance_to_target
 
         return value_to_return
+
+    def segment_image(self):
+        self.segmented_image = segmentation.flood_fill(self.segmented_image, (0, 0), 3, connectivity=1)
+        self.segmented_image = segmentation.flood_fill(self.segmented_image, (511, 511), 4, connectivity=1)
