@@ -13,26 +13,24 @@ from state import State
 class Environment:
     def __init__(self, image: np.array, pixel_to_mm_ratio):
         cv2.namedWindow("display", cv2.WINDOW_NORMAL)
-        # self.position = (0, 256)  # TODO: Change to start position
+
         self.position = (256, 0)  # TODO: Change to start position
-        # self.end_position = (512, 256)
+
         self.end_position = (256, 511)
         self.orientation = 0
-        self.pixel_to_mm_ratio = 1
+
+
         self.image = image
-        # self.__current_target_position = (0, 256)
+
         self.__current_target_position = (256, 0)
-        self.state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio,
-                           self.__current_target_position)
+        self.state = State(self.image, self.position, self.orientation, self.__current_target_position)
         self.__last_distance_to_target = 0
         self.__current_distance_to_target = 0
         self.old_targets = []
         self.old_target_reached = False
-        # self.__last_position = (0, 256)
         self.__last_position = (256, 0)
         self.__first_action = True
         self.update_target()
-        #self.__do_four_steps()
 
     def __do_four_steps(self):
         self.do_action(Action.RIGHT)
@@ -63,7 +61,6 @@ class Environment:
 
     def do_action(self, action):
         # action is a tuple of (x, y, orientation)
-        # print("Action: ", action)
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
 
         # Check if the agent is out of bounds
@@ -74,7 +71,7 @@ class Environment:
 
         self.orientation = (self.orientation + action.value[2]) % 360
         self.update_target()
-        self.state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio, self.__current_target_position)
+        self.state = State(self.image, self.position, self.orientation, self.__current_target_position)
         self.__first_action = False
         self.show_image()
 
@@ -82,13 +79,9 @@ class Environment:
 
 
     def reset_agent(self):
-        # self.position = (0, 256)  # TODO: Change to start position
         self.position = (256, 0)  # TODO: Change to start position
         self.orientation = 0
-        # self.image[self.position[0], self.position[1]] = AGENT
-        # self.do_action(Action.RIGHT)
-        # self.do_action(Action.RIGHT)
-        #self.__do_four_steps()
+
 
     def check_end_position(self):
         if self.position == self.end_position or self.position == (self.end_position[0] - 1, self.end_position[1]):
@@ -116,10 +109,6 @@ class Environment:
                     area[i][j] = 0
                 else:
                     area[i][j] = self.image[self.position[0] - 2 + i, self.position[1] - 2 + j]
-
-
-        # # Get the area around the agent
-        # area = self.image[self.position[0] - 2:self.position[0] + 3, self.position[1] - 2:self.position[1] + 3]
 
         # Get the indices of the pixels with the value WIRE
         indices = np.where(area == WIRE)
@@ -155,7 +144,6 @@ class Environment:
         self.__current_distance_to_target = 0
         self.__last_distance_to_target = self.__current_distance_to_target
         self.old_target_reached = True
-        # print("Old target removed: ", self.old_targets[-1], " New target: ", self.__current_target_position)
 
     def update_distance_to_target(self):
         """

@@ -9,10 +9,11 @@ os.environ["PYTHONHASHSEED"] = "42"
 
 # For now the class still uses the old attributes. Change later, when the new attributes (nxn array) are implemented.
 class State:
-    def __init__(self, image, position: tuple, orientation: int, pixel_to_mm_ratio: float, local_goal_position: tuple):
+    def __init__(self, image, position: tuple, orientation: int, local_goal_position: tuple):
         self.image = image.copy()
         self.matrix = np.zeros((5, 5))
         self.orientation = orientation
+        self.local_goal_position = local_goal_position
 
         # mark the local goal position in the image
         self.image[local_goal_position] = LOCAL_GOAL
@@ -25,50 +26,32 @@ class State:
                 else:
                     self.matrix[i][j] = self.image[position[0] - 2 + i, position[1] - 2 + j]
 
-        # if orientation == 0:
-        #     self.matrix[0][2] = self.matrix[0][2] + ELECTRODE_1
-        #     self.matrix[4][2] = self.matrix[4][2] + ELECTRODE_2
-        # elif orientation == 45:
-        #     self.matrix[0][0] = self.matrix[0][0] + ELECTRODE_1
-        #     self.matrix[4][4] = self.matrix[4][4] + ELECTRODE_2
-        # elif orientation == 90:
-        #     self.matrix[2][0] = self.matrix[2][0] + ELECTRODE_1
-        #     self.matrix[2][4] = self.matrix[2][4] + ELECTRODE_2
-        # elif orientation == 135:
-        #     self.matrix[4][0] = self.matrix[4][0] + ELECTRODE_1
-        #     self.matrix[0][4] = self.matrix[0][4] + ELECTRODE_2
-        # elif orientation == 180:
-        #     self.matrix[4][2] = self.matrix[4][2] + ELECTRODE_1
-        #     self.matrix[0][2] = self.matrix[0][2] + ELECTRODE_2
-        # elif orientation == 225:
-        #     self.matrix[4][4] = self.matrix[4][4] + ELECTRODE_1
-        #     self.matrix[0][0] = self.matrix[0][0] + ELECTRODE_2
-        # elif orientation == 270:
-        #     self.matrix[2][4] = self.matrix[2][4] + ELECTRODE_1
-        #     self.matrix[2][0] = self.matrix[2][0] + ELECTRODE_2
-        # elif orientation == 315:
-        #     self.matrix[0][4] = self.matrix[0][4] + ELECTRODE_1
-        #     self.matrix[4][0] = self.matrix[4][0] + ELECTRODE_2
-        facing_angle = (orientation + 45) % 360
+        if orientation == 0:
+            self.matrix[0][2] = self.matrix[0][2] + ELECTRODE_1
+            self.matrix[4][2] = self.matrix[4][2] + ELECTRODE_2
+        elif orientation == 45:
+            self.matrix[0][0] = self.matrix[0][0] + ELECTRODE_1
+            self.matrix[4][4] = self.matrix[4][4] + ELECTRODE_2
+        elif orientation == 90:
+            self.matrix[2][0] = self.matrix[2][0] + ELECTRODE_1
+            self.matrix[2][4] = self.matrix[2][4] + ELECTRODE_2
+        elif orientation == 135:
+            self.matrix[4][0] = self.matrix[4][0] + ELECTRODE_1
+            self.matrix[0][4] = self.matrix[0][4] + ELECTRODE_2
+        elif orientation == 180:
+            self.matrix[4][2] = self.matrix[4][2] + ELECTRODE_1
+            self.matrix[0][2] = self.matrix[0][2] + ELECTRODE_2
+        elif orientation == 225:
+            self.matrix[4][4] = self.matrix[4][4] + ELECTRODE_1
+            self.matrix[0][0] = self.matrix[0][0] + ELECTRODE_2
+        elif orientation == 270:
+            self.matrix[2][4] = self.matrix[2][4] + ELECTRODE_1
+            self.matrix[2][0] = self.matrix[2][0] + ELECTRODE_2
+        elif orientation == 315:
+            self.matrix[0][4] = self.matrix[0][4] + ELECTRODE_1
+            self.matrix[4][0] = self.matrix[4][0] + ELECTRODE_2
 
-        # Mapping of facing angles to matrix indices
-        angle_mapping = {
-            0: [(0, 2), (4, 2)],
-            45: [(0, 0), (4, 4)],
-            90: [(2, 0), (2, 4)],
-            135: [(4, 0), (0, 4)],
-            180: [(4, 2), (0, 2)],
-            225: [(4, 4), (0, 0)],
-            270: [(2, 4), (2, 0)],
-            315: [(0, 4), (4, 0)]
-        }
 
-        # Perform actions based on facing angle
-        for angle, indices in angle_mapping.items():
-            if facing_angle == angle:
-                self.matrix[indices[0][0]][indices[0][1]] += ELECTRODE_1
-                self.matrix[indices[1][0]][indices[1][1]] += ELECTRODE_2
-                break
 
 
         # print(self.matrix)
@@ -83,26 +66,28 @@ class State:
         if (len(electrode1_pos[0]) == 0 or len(electrode2_pos[0]) == 0):
             return False
 
-        facing_angle = (self.orientation + 45) % 360
-
+        is_collision = True
         interpolated_points = []
-        if self.orientation == 0 or self.orientation == 0 + 180:
-            interpolated_points = [(0, 2), (1, 2), (2, 2)]
-        elif facing_angle == 45 or facing_angle == 45 + 180:
-            # Interpolate between the two electrode points
-            interpolated_points = [(1, 1), (1, 2), (2, 1), (2, 2), (2, 3), (3, 2), (3, 3)]
-        elif facing_angle == 90 or facing_angle == 90 + 180:
-            interpolated_points = [(2, 0), (2, 1), (2, 2)]
-        elif facing_angle == 135 or facing_angle == 135 + 180:
-            interpolated_points = [(1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2)]
 
-        wire_present = False
+        if self.orientation == 0 or self.orientation == 180:
+            interpolated_points = [(1, 2), (2, 2), (3, 2)]
+        elif self.orientation == 45 or self.orientation == 225:
+            interpolated_points = [(1, 1), (2, 2), (3, 3), (1, 2), (2, 1), (2, 3), (3, 2)]
+        elif self.orientation == 90 or self.orientation == 270:
+            interpolated_points = [(2, 1), (2, 2), (2, 3)]
+        elif self.orientation == 135 or self.orientation == 315:
+            interpolated_points = [(1, 3), (2, 2), (3, 1), (1, 2), (2, 1), (2, 3), (3, 2)]
 
-        for pos in interpolated_points:
-            if self.matrix[int(pos[0]), int(pos[1])] == WIRE or self.matrix[int(pos[0]), int(pos[1])] == LOCAL_GOAL:
-                wire_present = True
+        for point in interpolated_points:
+            row = point[0]
+            col = point[1]
 
-        return not wire_present
+            if self.matrix[row][col] == 1:
+                is_collision = False
+                break
+
+        return is_collision
+
 
     # Added, because we want to save only the matrix hash in the q table and not the instance itself
     def get_hash(self):
