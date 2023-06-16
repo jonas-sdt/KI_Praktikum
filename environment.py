@@ -1,8 +1,5 @@
-import os
-
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
 
 from action import Action
 from action import Distance
@@ -18,7 +15,6 @@ class Environment:
 
         self.end_position = (256, 511)
         self.orientation = 0
-
 
         self.image = image
 
@@ -51,7 +47,7 @@ class Environment:
         # Add a line to the image to show the orientation of the agent
         # Calculate the end point of the line
         end_point = (int(image_position[0] + 10 * np.cos(np.deg2rad(self.orientation))),
-                        int(image_position[1] + 10 * np.sin(np.deg2rad(self.orientation))))
+                     int(image_position[1] + 10 * np.sin(np.deg2rad(self.orientation))))
         marked_image = cv2.line(marked_image, image_position, end_point, color=(0, 0, 255), thickness=1)
 
         # Show the image
@@ -64,7 +60,8 @@ class Environment:
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
 
         # Check if the agent is out of bounds
-        if self.position[0] < 0 or self.position[0] >= self.image.shape[0] or self.position[1] < 0 or self.position[1] >= self.image.shape[1]:
+        if self.position[0] < 0 or self.position[0] >= self.image.shape[0] or self.position[1] < 0 or self.position[
+            1] >= self.image.shape[1]:
             self.position = self.__last_position
             return True
         self.__last_position = self.position
@@ -77,11 +74,9 @@ class Environment:
 
         return False
 
-
     def reset_agent(self):
         self.position = (256, 0)  # TODO: Change to start position
         self.orientation = 0
-
 
     def check_end_position(self):
         if self.position == self.end_position or self.position == (self.end_position[0] - 1, self.end_position[1]):
@@ -105,7 +100,8 @@ class Environment:
         for i in range(5):
             for j in range(5):
                 # Check if value is out of bounds
-                if self.position[0] - 2 + i < 0 or self.position[0] - 2 + i >= self.image.shape[0] or self.position[1] - 2 + j < 0 or self.position[1] - 2 + j >= self.image.shape[1]:
+                if self.position[0] - 2 + i < 0 or self.position[0] - 2 + i >= self.image.shape[0] or self.position[
+                    1] - 2 + j < 0 or self.position[1] - 2 + j >= self.image.shape[1]:
                     area[i][j] = 0
                 else:
                     area[i][j] = self.image[self.position[0] - 2 + i, self.position[1] - 2 + j]
@@ -133,7 +129,6 @@ class Environment:
 
         sorted_indices = sorted(indx_with_distance.items(), key=lambda x: x[1])
 
-
         # Iterate over the indx_with_distance until there is an index that is not in the old targets
         for index in sorted_indices:
             pos = (self.position[0] - 2 + index[0][0], self.position[1] - 2 + index[0][1])
@@ -149,7 +144,8 @@ class Environment:
         """
         This method calculates the distance to the target
         """
-        self.__current_distance_to_target = np.sqrt((self.position[0] - self.__current_target_position[0]) ** 2 + (self.position[1] - self.__current_target_position[1]) ** 2)
+        self.__current_distance_to_target = np.sqrt((self.position[0] - self.__current_target_position[0]) ** 2 + (
+                    self.position[1] - self.__current_target_position[1]) ** 2)
         value_to_return = None
 
         if self.__current_distance_to_target < self.__last_distance_to_target:
@@ -162,9 +158,3 @@ class Environment:
         self.__last_distance_to_target = self.__current_distance_to_target
 
         return value_to_return
-
-
-
-
-
-

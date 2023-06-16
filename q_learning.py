@@ -1,17 +1,16 @@
-import os
-import pickle
-import random
-import numpy as np
 import atexit
+import os
+import random
 
 import cv2
+import numpy as np
 import pandas as pd
 
+import image_generator
 from action import Action, Distance
 from action import Options
-from environment import Environment
-import image_generator
 from dialogue import main as dialogue_main
+from environment import Environment
 from execute_best import ExecuteBest
 
 
@@ -39,8 +38,6 @@ class QValueAlgorithm:
             q_values[key] = np.array(value)
 
         self.q_values = q_values
-
-
 
     def choose_action(self, state):
         """
@@ -78,7 +75,7 @@ class QValueAlgorithm:
 
         distance_update = environment.update_distance_to_target()
 
-        if  distance_update == Distance.CLOSER:
+        if distance_update == Distance.CLOSER:
             return 10
         elif distance_update == Distance.FARTHER:
             return -5
@@ -99,9 +96,14 @@ class QValueAlgorithm:
             self.q_values[state_new.get_hash()] = np.zeros(len(self.action_list))
 
         # self.q_values[state.get_hash()][self.action_list.index(action)] += self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]) - self.q_values[state.get_hash()][self.action_list.index(action)])
-        #self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * self.q_values[state.get_hash()][self.action_list.index(action)] + self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]))
+        # self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * self.q_values[state.get_hash()][self.action_list.index(action)] + self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]))
 
-        self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * self.q_values[state.get_hash()][self.action_list.index(action)] + self.alpha * (reward + self.gamma * np.max(self.q_values[state_new.get_hash()]))
+        self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * \
+                                                                          self.q_values[state.get_hash()][
+                                                                              self.action_list.index(
+                                                                                  action)] + self.alpha * (
+                                                                                      reward + self.gamma * np.max(
+                                                                                  self.q_values[state_new.get_hash()]))
 
     def learn_exec(self, image):
         """
@@ -120,9 +122,8 @@ class QValueAlgorithm:
                 reward = self.get_reward(environment, is_out)
                 self.update_q_value(state, action, reward, state_new)
 
-
                 if is_out:
-                    #environment.reset_agent()
+                    # environment.reset_agent()
                     environment.position = environment.old_targets[-1]
 
                 state = state_new
@@ -147,12 +148,10 @@ class QValueAlgorithm:
             print("Episode: ", episode)
         self.save_q_values()
 
-
-
     def learn_training(self):
         image = image_generator.generate_image(512, 512)
         # Convert image from shape (512, 512, 1) to (512, 512)
-        #image = image.reshape((512, 512))
+        # image = image.reshape((512, 512))
         self.learn_exec(image)
 
     def save_q_values(self):

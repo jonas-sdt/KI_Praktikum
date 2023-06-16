@@ -1,11 +1,13 @@
-import numpy as np
-import image_generator
-import cv2
-from constants import *
-from scipy.interpolate import interp1d
 import os
 
+import cv2
+import numpy as np
+
+import image_generator
+from constants import *
+
 os.environ["PYTHONHASHSEED"] = "42"
+
 
 # For now the class still uses the old attributes. Change later, when the new attributes (nxn array) are implemented.
 class State:
@@ -21,7 +23,8 @@ class State:
         for i in range(5):
             for j in range(5):
                 # Check if value is out of bounds
-                if position[0] - 2 + i < 0 or position[0] - 2 + i >= self.image.shape[0] or position[1] - 2 + j < 0 or position[1] - 2 + j >= self.image.shape[1]:
+                if position[0] - 2 + i < 0 or position[0] - 2 + i >= self.image.shape[0] or position[1] - 2 + j < 0 or \
+                        position[1] - 2 + j >= self.image.shape[1]:
                     self.matrix[i][j] = 0
                 else:
                     self.matrix[i][j] = self.image[position[0] - 2 + i, position[1] - 2 + j]
@@ -50,13 +53,6 @@ class State:
         elif orientation == 315:
             self.matrix[0][4] = self.matrix[0][4] + ELECTRODE_1
             self.matrix[4][0] = self.matrix[4][0] + ELECTRODE_2
-
-
-
-
-        # print(self.matrix)
-
-
 
     def is_collided(self):
         # Find the positions of ELECTRODE_1 and ELECTRODE_2
@@ -88,7 +84,6 @@ class State:
 
         return is_collision
 
-
     # Added, because we want to save only the matrix hash in the q table and not the instance itself
     def get_hash(self):
         return hash(self.matrix.data.tobytes())
@@ -97,27 +92,32 @@ class State:
         # Pretty print the matrix with the correct values
         return str(self.matrix)
 
+
 def paint_state(img, position, orientation, pixel_to_mm_ratio, roi_size):
     # paint square around position in image
-    roi_min_x = int(position[0] - roi_size/2*pixel_to_mm_ratio) if int(position[0] - roi_size/2*pixel_to_mm_ratio) > 0 else 0
-    roi_max_x = int(position[0] + roi_size/2*pixel_to_mm_ratio) if int(position[0] + roi_size/2*pixel_to_mm_ratio) < img.shape[0] else img.shape[0]
-    roi_min_y = int(position[1] - roi_size/2*pixel_to_mm_ratio) if int(position[1] - roi_size/2*pixel_to_mm_ratio) > 0 else 0
-    roi_max_y = int(position[1] + roi_size/2*pixel_to_mm_ratio) if int(position[1] + roi_size/2*pixel_to_mm_ratio) < img.shape[1] else img.shape[1]
+    roi_min_x = int(position[0] - roi_size / 2 * pixel_to_mm_ratio) if int(
+        position[0] - roi_size / 2 * pixel_to_mm_ratio) > 0 else 0
+    roi_max_x = int(position[0] + roi_size / 2 * pixel_to_mm_ratio) if int(
+        position[0] + roi_size / 2 * pixel_to_mm_ratio) < img.shape[0] else img.shape[0]
+    roi_min_y = int(position[1] - roi_size / 2 * pixel_to_mm_ratio) if int(
+        position[1] - roi_size / 2 * pixel_to_mm_ratio) > 0 else 0
+    roi_max_y = int(position[1] + roi_size / 2 * pixel_to_mm_ratio) if int(
+        position[1] + roi_size / 2 * pixel_to_mm_ratio) < img.shape[1] else img.shape[1]
 
     img_rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     roi = np.zeros((roi_max_y - roi_min_y, roi_max_x - roi_min_x, 3))
-    roi[:,:,0] = 255
+    roi[:, :, 0] = 255
 
     img_rgb[roi_min_y:roi_max_y, roi_min_x:roi_max_x] = roi
 
     return img_rgb
 
+
 if __name__ == "__main__":
     # test
-    img = image_generator.generate_image(512,512)
-    state = State(img, (0,256), 0, 1, (1,256))
+    img = image_generator.generate_image(512, 512)
+    state = State(img, (0, 256), 0, 1, (1, 256))
     hash = state.__hash__()
     print(state)
 
-
-    image_generator.show_image(paint_state(img, (0,256), 0, 1, 50))
+    image_generator.show_image(paint_state(img, (0, 256), 0, 1, 50))
