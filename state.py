@@ -69,7 +69,7 @@ class State:
 
     # Added, because we want to save only the matrix hash in the q table and not the instance itself
     def get_hash(self):
-        return hash(self.matrix.data.tobytes())
+        return np.array_str(self.matrix)
 
     def __str__(self):
         # Pretty print the matrix with the correct values
