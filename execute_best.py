@@ -23,14 +23,16 @@ class ExecuteBest:
         self.q_values = self.load_q_values()
 
     def load_q_values(self):
-        csv_file_path = os.getcwd() + "/q_values_finished.csv"
-        # Reading the CSV file and recreating the DataFrame as a dictionary
-        df = pd.read_csv(csv_file_path)
+        # Reading the CSV file into a DataFrame
+        csv_file = os.getcwd() + "/q_values_finished.csv"
+        df = pd.read_csv(csv_file, index_col=0)
 
-        # Converting the DataFrame back to a dictionary
-        q_values = df.set_index('Unnamed: 0').T.to_dict('list')
+        # Converting the DataFrame back to a dictionary where the keys are the states and the values are the Q-values
+        q_values = df.T.to_dict('list')
+
+        # Converting the values from lists to numpy arrays
         for key, value in q_values.items():
-            q_values[key] = np.array(value[0])
+            q_values[key] = np.array(value)
 
         return q_values
         
@@ -41,6 +43,7 @@ class ExecuteBest:
             self.all_positions.append(self.environment.position)
             state = self.environment.state
             best_action = self.get_best_action(state)
+            print(best_action.name)
             self.all_actions.append(best_action.name)
             self.environment.do_action(best_action)
 

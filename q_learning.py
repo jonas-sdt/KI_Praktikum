@@ -95,9 +95,6 @@ class QValueAlgorithm:
         if state_new.get_hash() not in self.q_values:
             self.q_values[state_new.get_hash()] = np.zeros(len(self.action_list))
 
-        # self.q_values[state.get_hash()][self.action_list.index(action)] += self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]) - self.q_values[state.get_hash()][self.action_list.index(action)])
-        # self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * self.q_values[state.get_hash()][self.action_list.index(action)] + self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]))
-
         self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * \
                                                                           self.q_values[state.get_hash()][
                                                                               self.action_list.index(
@@ -109,8 +106,6 @@ class QValueAlgorithm:
         """
         This method executes the learning process
         """
-
-        orientations = []
 
         environment = Environment(image, 1)
         state = environment.state
@@ -131,27 +126,14 @@ class QValueAlgorithm:
                 self.action_number += 1
                 if self.action_number % 100 == 0:
                     self.epsilon = self.epsilon * 0.99
-                #     print("Epsilon: ", self.epsilon)
-                # print("Action number: ", self.action_number)
-                # print("Episode: ", episode)
-                # print("State: ", state)
-                # print("Action: ", action)
-                # print("Reward: ", reward)
-                # print("Q-values: ", self.q_values)
-                # print("---------------------------------------------------")
-                if environment.orientation not in orientations:
-                    orientations.append(environment.orientation)
 
             environment = Environment(image, 1)
-            print("Orientations: ", orientations)
             state = environment.state
-            print("Episode: ", episode)
+
         self.save_q_values()
 
     def learn_training(self):
         image = image_generator.generate_image(512, 512)
-        # Convert image from shape (512, 512, 1) to (512, 512)
-        # image = image.reshape((512, 512))
         self.learn_exec(image)
 
     def save_q_values(self):

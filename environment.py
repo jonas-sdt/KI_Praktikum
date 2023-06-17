@@ -23,7 +23,7 @@ class Environment:
         self.segment_image()
 
         self.__current_target_position = (256, 0)
-        self.state = State(self.image, self.position, self.orientation, self.__current_target_position, self.segmented_image)
+        self.state = State(self.position, self.orientation, self.__current_target_position, self.segmented_image)
         self.__last_distance_to_target = 0
         self.__current_distance_to_target = 0
         self.old_targets = []
@@ -31,12 +31,6 @@ class Environment:
         self.__last_position = (256, 0)
         self.__first_action = True
         self.update_target()
-
-    def __do_four_steps(self):
-        self.do_action(Action.RIGHT)
-        self.do_action(Action.RIGHT)
-        self.do_action(Action.RIGHT)
-        self.do_action(Action.RIGHT)
 
     def show_image(self):
         # Mark the current position of the agent in the image
@@ -72,15 +66,11 @@ class Environment:
 
         self.orientation = (self.orientation + action.value[2]) % 360
         self.update_target()
-        self.state = State(self.image, self.position, self.orientation, self.__current_target_position, self.segmented_image)
+        self.state = State(self.position, self.orientation, self.__current_target_position, self.segmented_image)
         self.__first_action = False
         self.show_image()
 
         return False
-
-    def reset_agent(self):
-        self.position = (256, 0)  # TODO: Change to start position
-        self.orientation = 0
 
     def check_end_position(self):
         if self.position == self.end_position or self.position == (self.end_position[0] - 1, self.end_position[1]):
