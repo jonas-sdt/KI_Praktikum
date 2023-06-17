@@ -3,6 +3,7 @@ import pickle
 
 import cv2
 import numpy as np
+import pandas as pd
 
 from action import Action
 from environment import Environment
@@ -13,7 +14,8 @@ class ExecuteBest:
         # Get the first element from the real_images folder
         self.action_list = list(Action)
         path = os.path.join(os.getcwd(), "real_images")
-        self.image = os.listdir(path)[0]
+        self.image = cv2.imread(os.path.join(path, os.listdir(path)[0]), cv2.IMREAD_GRAYSCALE)
+        self.image = self.image / 255
         self.all_positions = []
         self.all_actions = []
         self.environment = Environment(self.image, 1)
@@ -21,9 +23,16 @@ class ExecuteBest:
         self.q_values = self.load_q_values()
 
     def load_q_values(self):
-        pickle_file_path = os.getcwd() + "/q_values_finished.pickle"
-        with open(pickle_file_path, 'rb') as file:
-            return pickle.load(file)
+        csv_file_path = os.getcwd() + "/q_values_finished.csv"
+        # Reading the CSV file and recreating the DataFrame as a dictionary
+        df = pd.read_csv(csv_file_path)
+
+        # Converting the DataFrame back to a dictionary
+        q_values = df.set_index('Unnamed: 0').T.to_dict('list')
+        for key, value in q_values.items():
+            q_values[key] = np.array(value[0])
+
+        return q_values
         
     def execute(self):
         self.environment.do_action(Action.RIGHT)

@@ -1,36 +1,36 @@
-import os
-
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
 
 from action import Action
-from constants import WIRE
+from action import Distance
+from constants import WIRE, NO_WIRE
 from state import State
+from skimage import segmentation
 
 
 class Environment:
     def __init__(self, image: np.array, pixel_to_mm_ratio):
         cv2.namedWindow("display", cv2.WINDOW_NORMAL)
-        # self.position = (0, 256)  # TODO: Change to start position
+
         self.position = (256, 0)  # TODO: Change to start position
-        # self.end_position = (512, 256)
-        self.end_position = (256, 512)
+
+        self.end_position = (256, 511)
         self.orientation = 0
-        self.pixel_to_mm_ratio = 1
+
         self.image = image
-        # self.__current_target_position = (0, 256)
+
+        self.segmented_image = image.copy()
+        self.segment_image()
+
         self.__current_target_position = (256, 0)
-        self.state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio,
-                           self.__current_target_position)
+        self.state = State(self.image, self.position, self.orientation, self.__current_target_position, self.segmented_image)
         self.__last_distance_to_target = 0
         self.__current_distance_to_target = 0
-        self.__old_targets = []
-        # self.__last_position = (0, 256)
+        self.old_targets = []
+        self.old_target_reached = False
         self.__last_position = (256, 0)
         self.__first_action = True
         self.update_target()
-        #self.__do_four_steps()
 
     def __do_four_steps(self):
         self.do_action(Action.RIGHT)
@@ -47,6 +47,13 @@ class Environment:
         marked_image = cv2.cvtColor(marked_image, cv2.COLOR_GRAY2RGB)
         image_position = (self.position[1], self.position[0])
         marked_image = cv2.circle(marked_image, image_position, radius=0, color=(0, 0, 255), thickness=2)
+
+        # Add a line to the image to show the orientation of the agent
+        # Calculate the end point of the line
+        end_point = (int(image_position[0] + 10 * np.cos(np.deg2rad(self.orientation))),
+                     int(image_position[1] + 10 * (-np.sin(np.deg2rad(self.orientation)))))
+        marked_image = cv2.line(marked_image, image_position, end_point, color=(0, 0, 255), thickness=1)
+
         # Show the image
         cv2.imshow('display', marked_image)
         # Update the window
@@ -54,36 +61,29 @@ class Environment:
 
     def do_action(self, action):
         # action is a tuple of (x, y, orientation)
-        print("Action: ", action)
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
 
         # Check if the agent is out of bounds
-        if self.position[0] < 0 or self.position[0] >= self.image.shape[0] or self.position[1] < 0 or self.position[1] >= self.image.shape[1]:
+        if self.position[0] < 0 or self.position[0] >= self.image.shape[0] or self.position[1] < 0 or self.position[
+            1] >= self.image.shape[1]:
             self.position = self.__last_position
             return True
         self.__last_position = self.position
 
         self.orientation = (self.orientation + action.value[2]) % 360
         self.update_target()
-        self.state = State(self.image, self.position, self.orientation, self.pixel_to_mm_ratio, self.__current_target_position)
+        self.state = State(self.image, self.position, self.orientation, self.__current_target_position, self.segmented_image)
         self.__first_action = False
         self.show_image()
 
         return False
 
-
     def reset_agent(self):
-        # self.position = (0, 256)  # TODO: Change to start position
         self.position = (256, 0)  # TODO: Change to start position
         self.orientation = 0
-        # self.image[self.position[0], self.position[1]] = AGENT
-        # self.do_action(Action.RIGHT)
-        # self.do_action(Action.RIGHT)
-        #self.__do_four_steps()
 
     def check_end_position(self):
-        if self.position[0] == self.end_position[0] - 2 and self.position[1] == self.end_position[1]:
-            self.__do_four_steps()
+        if self.position == self.end_position or self.position == (self.end_position[0] - 1, self.end_position[1]):
             return True
         else:
             return False
@@ -94,25 +94,21 @@ class Environment:
         """
         # If the target is already found, return
         if self.position != self.__current_target_position:
+            self.old_target_reached = False
             return
 
-        self.__old_targets.append(self.__current_target_position)
+        self.old_targets.append(self.__current_target_position)
 
         area = np.zeros((5, 5))
-
-        # WHY DID X AND Y CHANGE PLACES HERE?
 
         for i in range(5):
             for j in range(5):
                 # Check if value is out of bounds
-                if self.position[0] - 2 + i < 0 or self.position[0] - 2 + i >= self.image.shape[0] or self.position[1] - 2 + j < 0 or self.position[1] - 2 + j >= self.image.shape[1]:
+                if self.position[0] - 2 + i < 0 or self.position[0] - 2 + i >= self.image.shape[0] or self.position[
+                    1] - 2 + j < 0 or self.position[1] - 2 + j >= self.image.shape[1]:
                     area[i][j] = 0
                 else:
                     area[i][j] = self.image[self.position[0] - 2 + i, self.position[1] - 2 + j]
-
-
-        # # Get the area around the agent
-        # area = self.image[self.position[0] - 2:self.position[0] + 3, self.position[1] - 2:self.position[1] + 3]
 
         # Get the indices of the pixels with the value WIRE
         indices = np.where(area == WIRE)
@@ -137,31 +133,36 @@ class Environment:
 
         sorted_indices = sorted(indx_with_distance.items(), key=lambda x: x[1])
 
-
         # Iterate over the indx_with_distance until there is an index that is not in the old targets
         for index in sorted_indices:
             pos = (self.position[0] - 2 + index[0][0], self.position[1] - 2 + index[0][1])
-            if pos not in self.__old_targets:
+            if pos not in self.old_targets:
                 self.__current_target_position = pos
                 break
 
         self.__current_distance_to_target = 0
         self.__last_distance_to_target = self.__current_distance_to_target
-
-        print("Old target removed: ", self.__old_targets[-1], " New target: ", self.__current_target_position)
+        self.old_target_reached = True
 
     def update_distance_to_target(self):
         """
         This method calculates the distance to the target
         """
-        self.__current_distance_to_target = np.sqrt((self.position[0] - self.__current_target_position[0]) ** 2 + (self.position[1] - self.__current_target_position[1]) ** 2)
-        is_closer = self.__current_distance_to_target < self.__last_distance_to_target
+        self.__current_distance_to_target = np.sqrt((self.position[0] - self.__current_target_position[0]) ** 2 + (
+                    self.position[1] - self.__current_target_position[1]) ** 2)
+        value_to_return = None
+
+        if self.__current_distance_to_target < self.__last_distance_to_target:
+            value_to_return = Distance.CLOSER
+        elif self.__current_distance_to_target > self.__last_distance_to_target:
+            value_to_return = Distance.FARTHER
+        else:
+            value_to_return = Distance.SAME
+
         self.__last_distance_to_target = self.__current_distance_to_target
 
-        return is_closer
+        return value_to_return
 
-
-
-
-
-
+    def segment_image(self):
+        self.segmented_image = segmentation.flood_fill(self.segmented_image, (0, 0), 3, connectivity=1)
+        self.segmented_image = segmentation.flood_fill(self.segmented_image, (511, 511), 4, connectivity=1)

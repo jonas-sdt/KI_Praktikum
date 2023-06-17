@@ -12,8 +12,8 @@ def generate_image(width, height):
     
     # Draw the spline
     img = cv2.polylines(img, [np.int32(spline)], False, (255, 255, 255))
-    
-    return img[:,:,0]
+
+    return img[:,:,0] / 255
 
 def show_image(img):
     # Display the image

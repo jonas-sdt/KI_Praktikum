@@ -6,7 +6,7 @@ from action import Options
 class ChoiceDialog:
     def __init__(self, root):
         self.root = root
-        self.root.geometry("300x220")  # Set the window size
+        self.root.geometry("300x250")  # Set the window size
         self.root.title("Choice Dialog")  # Set the window title
         self.root.resizable(False, False)  # Disable window resizing
         self.root.configure(bg="white")  # Set background color
@@ -36,17 +36,23 @@ class ChoiceDialog:
         self.number_entry.insert(0, "1")
         self.ok_button = ttk.Button(self.main_frame, text="OK", command=self.close_window, state='disabled')
 
+
+
         self.choice = None
         self.entered_number = None
+        self.use_pre_trained_q_values = tk.BooleanVar()
+        self.check_box = ttk.Checkbutton(self.main_frame, text="Use pre-trained q-values", variable=self.use_pre_trained_q_values, onvalue=True, offvalue=False)
 
     def option_selected(self, selected_option):
         self.choice = selected_option
         if selected_option == Options.TRAINING_GENERATED.value:
             self.number_label.pack(fill=tk.X, pady=10)
             self.number_entry.pack(fill=tk.X)
+            self.check_box.pack(fill=tk.X)
         else:
             self.number_label.pack_forget()
             self.number_entry.pack_forget()
+            self.check_box.pack_forget()
         self.ok_button.pack(fill=tk.X, pady=10)
         self.ok_button['state'] = 'normal'  # Enable the button
         # Set the color to black
@@ -76,7 +82,7 @@ def main():
         messagebox.showerror("Error", "You must select an option")
         exit(1)
 
-    return choice_dialog.choice, choice_dialog.entered_number
+    return choice_dialog.choice, choice_dialog.entered_number, choice_dialog.use_pre_trained_q_values.get()
 
 
 if __name__ == "__main__":

@@ -20,3 +20,8 @@ class Options(Enum):
     TRAINING_GENERATED = "Train on generated data"
     TRAINING_REAL = "Train on real data"
     EXECUTE_FINAL = "Execute final model"
+
+class Distance(Enum):
+    CLOSER = 1
+    FARTHER = 0
+    SAME = 2

@@ -1,15 +1,16 @@
+import atexit
 import os
-import pickle
 import random
-import numpy as np
 
 import cv2
+import numpy as np
+import pandas as pd
 
-from action import Action
-from action import Options
-from environment import Environment
 import image_generator
+from action import Action, Distance
+from action import Options
 from dialogue import main as dialogue_main
+from environment import Environment
 from execute_best import ExecuteBest
 
 
@@ -20,14 +21,23 @@ class QValueAlgorithm:
         self.alpha = 0.3
         self.gamma = 0.9
         self.action_list = list(Action)
-        self.episodes = 1000
+        self.episodes = 5
         self.action_number = 0
+        atexit.register(self.exit_handler)
 
     def load_q_values(self):
-        pickle_file_path = os.getcwd() + "/q_values_finished.pickle"
-        with open(pickle_file_path, 'rb') as file:
-            self.q_values = pickle.load(file)
+        # Reading the CSV file into a DataFrame
+        csv_file = os.getcwd() + "/q_values_finished.csv"
+        df = pd.read_csv(csv_file, index_col=0)
 
+        # Converting the DataFrame back to a dictionary where the keys are the states and the values are the Q-values
+        q_values = df.T.to_dict('list')
+
+        # Converting the values from lists to numpy arrays
+        for key, value in q_values.items():
+            q_values[key] = np.array(value)
+
+        self.q_values = q_values
 
     def choose_action(self, state):
         """
@@ -51,98 +61,141 @@ class QValueAlgorithm:
     def get_reward(self, environment, is_out_of_bounds=False):
         """
         This method returns the reward for the given state, if collided return -100, if in position return 10, else return -2
-        :param state:
+        :param emvironment:
         """
         state = environment.state
         if is_out_of_bounds:
             return -100
 
         if state.is_collided():
+            environment.position = environment.old_targets[-1]
             return -100
-        elif environment.update_distance_to_target():
+        elif environment.old_target_reached:
+            return 50
+
+        distance_update = environment.update_distance_to_target()
+
+        if distance_update == Distance.CLOSER:
             return 10
+        elif distance_update == Distance.FARTHER:
+            return -5
         else:
             return -2
 
-    def update_q_value(self, state, action, reward):
+    def update_q_value(self, state, action, reward, state_new):
         """
         This method updates the Q-value for the given state-action pair
         :param state:
         :param action:
         :param reward:
         """
-        if state not in self.q_values:
+        if state.get_hash() not in self.q_values:
             self.q_values[state.get_hash()] = np.zeros(len(self.action_list))
 
-        self.q_values[state.get_hash()][self.action_list.index(action)] += self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]) - self.q_values[state.get_hash()][self.action_list.index(action)])
+        if state_new.get_hash() not in self.q_values:
+            self.q_values[state_new.get_hash()] = np.zeros(len(self.action_list))
+
+        # self.q_values[state.get_hash()][self.action_list.index(action)] += self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]) - self.q_values[state.get_hash()][self.action_list.index(action)])
+        # self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * self.q_values[state.get_hash()][self.action_list.index(action)] + self.alpha * (reward + self.gamma * np.max(self.q_values[state.get_hash()]))
+
+        self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * \
+                                                                          self.q_values[state.get_hash()][
+                                                                              self.action_list.index(
+                                                                                  action)] + self.alpha * (
+                                                                                      reward + self.gamma * np.max(
+                                                                                  self.q_values[state_new.get_hash()]))
 
     def learn_exec(self, image):
         """
         This method executes the learning process
         """
+
+        orientations = []
+
         environment = Environment(image, 1)
         state = environment.state
         for episode in range(self.episodes):
-            while not environment.check_end_position() and not state.is_collided():
+            while not environment.check_end_position():
                 action = self.choose_action(state)
                 is_out = environment.do_action(action)
-                state = environment.state
+                state_new = environment.state
                 reward = self.get_reward(environment, is_out)
-                self.update_q_value(state, action, reward)
+                self.update_q_value(state, action, reward, state_new)
 
                 if is_out:
-                    environment.reset_agent()
+                    # environment.reset_agent()
+                    environment.position = environment.old_targets[-1]
+
+                state = state_new
 
                 self.action_number += 1
                 if self.action_number % 100 == 0:
                     self.epsilon = self.epsilon * 0.99
-                    print("Epsilon: ", self.epsilon)
-                print("Action number: ", self.action_number)
-                print("Episode: ", episode)
-                print("State: ", state)
-                print("Action: ", action)
-                print("Reward: ", reward)
-                print("Q-values: ", self.q_values)
-                print("---------------------------------------------------")
+                #     print("Epsilon: ", self.epsilon)
+                # print("Action number: ", self.action_number)
+                # print("Episode: ", episode)
+                # print("State: ", state)
+                # print("Action: ", action)
+                # print("Reward: ", reward)
+                # print("Q-values: ", self.q_values)
+                # print("---------------------------------------------------")
+                if environment.orientation not in orientations:
+                    orientations.append(environment.orientation)
+
             environment = Environment(image, 1)
+            print("Orientations: ", orientations)
             state = environment.state
-        with open('q_values_finished.pickle', 'wb') as handle:
-            pickle.dump(self.q_values, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-
+            print("Episode: ", episode)
+        self.save_q_values()
 
     def learn_training(self):
         image = image_generator.generate_image(512, 512)
         # Convert image from shape (512, 512, 1) to (512, 512)
-        #image = image.reshape((512, 512))
+        # image = image.reshape((512, 512))
         self.learn_exec(image)
+
+    def save_q_values(self):
+        # Converting the dictionary to a DataFrame
+        df = pd.DataFrame.from_dict(self.q_values, orient='index')
+        df.columns = self.action_list
+        # Saving the DataFrame to a csv file
+        df.to_csv("q_values_finished.csv")
+
+    def exit_handler(self):
+        print("Saving q_values")
+        self.save_q_values()
 
 
 if __name__ == '__main__':
     q_value_algorithm = QValueAlgorithm()
-    decision, number_of_images = dialogue_main()
+    decision, number_of_images, use_pre_trained_values = dialogue_main()
     number_of_images = int(number_of_images)
-    print("Decision: ", decision)
+    # print("Decision: ", decision)
     if decision == Options.TRAINING_REAL.value:
-        print("User chose to use real images")
+        # print("User chose to use real images")
         file_path = ""
         file_name = ""
         try:
             file_path = os.getcwd() + "/real_images"
             file_name = os.listdir(file_path)[0]
             image = cv2.imread(file_path + "/" + file_name)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            image = image[:, :] / 255
+            q_value_algorithm.load_q_values()
             q_value_algorithm.learn_exec(image)
         except FileNotFoundError:
             print("File not found")
             exit(1)
 
-        image = cv2.imread(file_path + "/" + file_name)
-        q_value_algorithm.learn_exec(image)
     elif decision == Options.TRAINING_GENERATED.value:
         print("User chose to use generated images")
         if number_of_images <= 0:
             raise ValueError("Number of images must be greater than 0")
-        for i in range(number_of_images):
+
+        if use_pre_trained_values:
+            q_value_algorithm.load_q_values()
+
+        for i in range(number_of_images + 1):
             if i > 0:
                 q_value_algorithm.load_q_values()
             q_value_algorithm.learn_training()
