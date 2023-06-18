@@ -2,6 +2,16 @@ import socket
 from threading import Thread
 import time
 
+import os
+import pickle
+
+import cv2
+import numpy as np
+import pandas as pd
+
+from action import Action
+from environment import Environment
+
 
 # ******************************************************************************
 # Settings
@@ -175,9 +185,11 @@ class AiTestClass:
         time.sleep(5)
 
     def solver(self):
-        pizza = str(b"\xF0\x9F\x8D\x95", "utf-8")
-        beer = str(b"\xF0\x9F\x8D\xBA", "utf-8")
-        print(f"\nAI solver is running. It's {pizza} and {beer} time! :)\n")
+        # Perform the necessary modifications here to generate the best action as a string
+        execute_best = ExecuteBest()
+        execute_best.execute()
+        best_action = execute_best.all_actions[-1]
+        print(f"\nAI solver selected the best action: {best_action}\n")
         time.sleep(15)
 
 
