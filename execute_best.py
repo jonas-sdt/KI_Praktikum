@@ -15,10 +15,13 @@ class ExecuteBest:
         self.action_list = list(Action)
         path = os.path.join(os.getcwd(), "real_images")
         self.image = cv2.imread(os.path.join(path, os.listdir(path)[0]), cv2.IMREAD_GRAYSCALE)
+        # self.image, last_row, last_column = imageprocessing(os.path.join(path, os.listdir(path)[0]))
+        last_row = 256
+        last_column = 511
         self.image = self.image / 255
         self.all_positions = []
         self.all_actions = []
-        self.environment = Environment(self.image, 1)
+        self.environment = Environment(self.image, 1, last_row, last_column)
 
         self.q_values = self.load_q_values()
 
@@ -37,11 +40,14 @@ class ExecuteBest:
         return q_values
         
     def execute(self):
-        self.environment.do_action(Action.RIGHT)
-        self.all_actions.append(Action.RIGHT.name)
+        self.environment.do_action(Action.R)
+        self.all_actions.append(Action.R.name)
         while self.environment.position != self.environment.end_position:
             self.all_positions.append(self.environment.position)
             state = self.environment.state
+            if state.is_collided():
+                print("Collided!")
+                break
             best_action = self.get_best_action(state)
             print(best_action.name)
             self.all_actions.append(best_action.name)

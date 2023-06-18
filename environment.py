@@ -9,12 +9,13 @@ from skimage import segmentation
 
 
 class Environment:
-    def __init__(self, image: np.array, pixel_to_mm_ratio):
+    def __init__(self, image: np.array, pixel_to_mm_ratio, last_row=256, last_column=511):
         cv2.namedWindow("display", cv2.WINDOW_NORMAL)
 
         self.position = (256, 0)  # TODO: Change to start position
+        self.position_without_crash = [self.position]
 
-        self.end_position = (256, 511)
+        self.end_position = (last_row, last_column)
         self.orientation = 0
 
         self.image = image
@@ -48,6 +49,11 @@ class Environment:
                      int(image_position[1] + 10 * (-np.sin(np.deg2rad(self.orientation)))))
         marked_image = cv2.line(marked_image, image_position, end_point, color=(0, 0, 255), thickness=1)
 
+        # mark the position without crash green
+        for position in self.position_without_crash:
+            image_position = (position[1], position[0])
+            marked_image = cv2.circle(marked_image, image_position, radius=0, color=(0, 255, 0), thickness=1)
+
         # Show the image
         cv2.imshow('display', marked_image)
         # Update the window
@@ -56,6 +62,7 @@ class Environment:
     def do_action(self, action):
         # action is a tuple of (x, y, orientation)
         self.position = (self.position[0] + action.value[0], self.position[1] + action.value[1])
+        self.position_without_crash.append(self.position)
 
         # Check if the agent is out of bounds
         if self.position[0] < 0 or self.position[0] >= self.image.shape[0] or self.position[1] < 0 or self.position[

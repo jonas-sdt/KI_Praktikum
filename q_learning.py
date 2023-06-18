@@ -68,10 +68,12 @@ class QValueAlgorithm:
         state = environment.state
         if is_out_of_bounds:
             self.no_collision = False
+            environment.position_without_crash = []
             return -100
 
         if state.is_collided():
             environment.position = environment.old_targets[-1]
+            environment.position_without_crash = []
             self.no_collision = False
             return -100
         elif environment.old_target_reached:
@@ -106,12 +108,12 @@ class QValueAlgorithm:
                                                                                       reward + self.gamma * np.max(
                                                                                   self.q_values[state_new.get_hash()]))
 
-    def learn_exec(self, image):
+    def learn_exec(self, image, last_row=256, last_col=511):
         """
         This method executes the learning process
         """
 
-        environment = Environment(image, 1)
+        environment = Environment(image, 1, last_row, last_col)
         state = environment.state
         for episode in range(self.episodes):
             while not environment.check_end_position():
@@ -165,9 +167,7 @@ if __name__ == '__main__':
     q_value_algorithm = QValueAlgorithm()
     decision, number_of_images, use_pre_trained_values = dialogue_main()
     number_of_images = int(number_of_images)
-    # print("Decision: ", decision)
     if decision == Options.TRAINING_REAL.value:
-        # print("User chose to use real images")
         file_path = ""
         file_name = ""
         try:
@@ -176,10 +176,13 @@ if __name__ == '__main__':
             image = cv2.imread(file_path + "/" + file_name)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             image = image[:, :] / 255
+            # image, row_last, column_last = imageprocessing(file_path + "/" + file_name)
+            row_last = 256
+            column_last = 511
             q_value_algorithm.load_q_values()
             q_value_algorithm.train_real = True
             q_value_algorithm.episodes = 1000
-            q_value_algorithm.learn_exec(image)
+            q_value_algorithm.learn_exec(image, row_last, column_last)
         except FileNotFoundError:
             print("File not found")
             exit(1)
