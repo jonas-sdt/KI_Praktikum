@@ -184,12 +184,12 @@ class AiTestClass:
         print(f"\nAI take the {photo}.\n")
         time.sleep(5)
 
+    
     def solver(self):
-        # Perform the necessary modifications here to generate the best action as a string
         execute_best = ExecuteBest()
         execute_best.execute()
-        best_action = execute_best.all_actions[-1]
-        print(f"\nAI solver selected the best action: {best_action}\n")
+        self.best_actions = ''.join(execute_best.all_actions)
+        print("AI solver hat die besten Aktionsschritte ausgewählt.")
         time.sleep(15)
 
 
