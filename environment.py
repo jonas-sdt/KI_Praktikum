@@ -139,7 +139,7 @@ class Environment:
         This method calculates the distance to the target
         """
         self.__current_distance_to_target = np.sqrt((self.position[0] - self.__current_target_position[0]) ** 2 + (
-                    self.position[1] - self.__current_target_position[1]) ** 2)
+                self.position[1] - self.__current_target_position[1]) ** 2)
         value_to_return = None
 
         if self.__current_distance_to_target < self.__last_distance_to_target:

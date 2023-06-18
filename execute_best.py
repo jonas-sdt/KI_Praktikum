@@ -48,6 +48,7 @@ class ExecuteBest:
             self.environment.do_action(best_action)
 
         # Convert the image to bgr
+        self.image = cv2.normalize(self.image, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
         self.image = cv2.cvtColor(self.image, cv2.COLOR_RGB2BGR)
 
         # Add all positions to the image with the color green
@@ -56,6 +57,7 @@ class ExecuteBest:
 
         # Show the image
         cv2.imshow("image", self.image)
+        cv2.waitKey(0)
 
     def get_best_action(self, state):
         """

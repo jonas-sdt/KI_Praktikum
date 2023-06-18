@@ -23,6 +23,8 @@ class QValueAlgorithm:
         self.action_list = list(Action)
         self.episodes = 5
         self.action_number = 0
+        self.no_collision = True
+        self.train_real = False
         atexit.register(self.exit_handler)
 
     def load_q_values(self):
@@ -65,10 +67,12 @@ class QValueAlgorithm:
         """
         state = environment.state
         if is_out_of_bounds:
+            self.no_collision = False
             return -100
 
         if state.is_collided():
             environment.position = environment.old_targets[-1]
+            self.no_collision = False
             return -100
         elif environment.old_target_reached:
             return 50
@@ -127,6 +131,11 @@ class QValueAlgorithm:
                 if self.action_number % 100 == 0:
                     self.epsilon = self.epsilon * 0.99
 
+            if self.train_real:
+                if self.no_collision:
+                    print("No collision")
+                    break
+            self.no_collision = True
             environment = Environment(image, 1)
             state = environment.state
 
@@ -137,6 +146,10 @@ class QValueAlgorithm:
         self.learn_exec(image)
 
     def save_q_values(self):
+        if len(self.q_values) == 0:
+            print("No q_values to save")
+            return
+
         # Converting the dictionary to a DataFrame
         df = pd.DataFrame.from_dict(self.q_values, orient='index')
         df.columns = self.action_list
@@ -164,6 +177,8 @@ if __name__ == '__main__':
             image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             image = image[:, :] / 255
             q_value_algorithm.load_q_values()
+            q_value_algorithm.train_real = True
+            q_value_algorithm.episodes = 1000
             q_value_algorithm.learn_exec(image)
         except FileNotFoundError:
             print("File not found")
