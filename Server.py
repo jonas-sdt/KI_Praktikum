@@ -27,9 +27,7 @@ ai_config = ""
 moves_string = ""
 # Bewegungs String muss angepasst werden
 # TEST
-moves_string = (
-    "rdrdrddrcrdrcdrcrrrrwrrwurrwrurrrrruuuuwrrrururruuuuuwwuuuuulullluuuucuuuwuurrrrr"
-)
+#moves_string = ("rdrdrddrcrdrcdrcrrrrwrrwurrwrurrrrruuuuwrrrururruuuuuwwuuuuulullluuuucuuuwuurrrrr" )
 
 
 class interface:
@@ -153,6 +151,7 @@ class ClientThread(Thread):
                             to_send = interface.make_xml(self, 2, "")  # wait
                         elif ai_state == 2:
                             # AI is ready with the calculation and generates motion string
+                            moves_string = ai_test.get_moves_string()  # Get the moves_string from AI
                             to_send = interface.make_xml(self, 3, moves_string)  # start
                             ai_state = 0
                     elif data == "NoSeq":
@@ -191,6 +190,12 @@ class AiTestClass:
         self.best_actions = ''.join(execute_best.all_actions)
         print("AI solver hat die besten Aktionsschritte ausgewählt.")
         time.sleep(15)
+
+        # Generate moves_string based on the solver result
+        self.moves_string = self.best_actions
+
+    def get_moves_string(self):
+        return self.moves_string
 
 
 class AiThread(Thread):
