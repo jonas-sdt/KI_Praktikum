@@ -7,6 +7,7 @@ import pandas as pd
 
 from action import Action
 from environment import Environment
+from image_processing import imageprocessing
 
 
 class ExecuteBest:
@@ -14,10 +15,10 @@ class ExecuteBest:
         # Get the first element from the real_images folder
         self.action_list = list(Action)
         path = os.path.join(os.getcwd(), "real_images")
-        self.image = cv2.imread(os.path.join(path, os.listdir(path)[0]), cv2.IMREAD_GRAYSCALE)
-        # self.image, last_row, last_column = imageprocessing(os.path.join(path, os.listdir(path)[0]))
-        last_row = 256
-        last_column = 511
+        #self.image = cv2.imread(os.path.join(path, os.listdir(path)[0]), cv2.IMREAD_GRAYSCALE)
+        self.image, last_row, last_column = imageprocessing(os.path.join(path, os.listdir(path)[0]))
+        # last_row = 256
+        # last_column = 511
         self.image = self.image / 255
         self.all_positions = []
         self.all_actions = []

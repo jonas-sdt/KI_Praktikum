@@ -12,6 +12,7 @@ from action import Options
 from dialogue import main as dialogue_main
 from environment import Environment
 from execute_best import ExecuteBest
+from image_processing import imageprocessing
 
 
 class QValueAlgorithm:
@@ -175,12 +176,12 @@ if __name__ == '__main__':
         try:
             file_path = os.getcwd() + "/real_images"
             file_name = os.listdir(file_path)[0]
-            image = cv2.imread(file_path + "/" + file_name)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            image = image[:, :] / 255
-            # image, row_last, column_last = imageprocessing(file_path + "/" + file_name)
-            row_last = 256
-            column_last = 511
+            # image = cv2.imread(file_path + "/" + file_name)
+            # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            # image = image[:, :] / 255
+            image, row_last, column_last = imageprocessing(file_path + "/" + file_name)
+            # row_last = 256
+            # column_last = 511
             q_value_algorithm.load_q_values()
             q_value_algorithm.train_real = True
             q_value_algorithm.episodes = 1000
