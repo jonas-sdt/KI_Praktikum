@@ -18,7 +18,7 @@ from image_processing import imageprocessing
 class QValueAlgorithm:
     def __init__(self):
         self.q_values = {}
-        self.epsilon = 1
+        self.epsilon = 0.1
         self.alpha = 0.3
         self.gamma = 0.9
         self.action_list = list(Action)

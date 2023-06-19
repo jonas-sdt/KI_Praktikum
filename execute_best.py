@@ -46,9 +46,6 @@ class ExecuteBest:
         while self.environment.position != self.environment.end_position:
             self.all_positions.append(self.environment.position)
             state = self.environment.state
-            if state.is_collided():
-                print("Collided!")
-                break
             best_action = self.get_best_action(state)
             print(best_action.name)
             self.all_actions.append(best_action.name)

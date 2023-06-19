@@ -10,7 +10,7 @@ def imageprocessing(img):
     #cv2.waitKey(0)
     
     # Bild Rotieren um 180°
-    rota = cv2.rotate(start, cv2.ROTATE_180)   (!!! Beispielbild musste nicht rotiert werden!!!)
+    rota = cv2.rotate(start, cv2.ROTATE_180)   #(!!! Beispielbild musste nicht rotiert werden!!!)
     #cv2.imshow("rotiertes bild", rota)
     #cv2.waitKey(0)
 
