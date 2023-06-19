@@ -1,11 +1,10 @@
 import cv2
 import numpy as np
-
-from action import Action
-from action import Distance
-from constants import WIRE, NO_WIRE
-from state import State
 from skimage import segmentation
+
+from action import Distance
+from constants import WIRE
+from state import State
 
 
 class Environment:
