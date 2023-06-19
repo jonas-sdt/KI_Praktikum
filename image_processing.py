@@ -8,19 +8,21 @@ def imageprocessing(img):
     start = cv2.imread(img)
     #cv2.imshow("anfangs bild", img)
     #cv2.waitKey(0)
+    
+    # Bild Rotieren um 180°
+    rota = cv2.rotate(start, cv2.ROTATE_180)   (!!! Beispielbild musste nicht rotiert werden!!!)
+    #cv2.imshow("rotiertes bild", rota)
+    #cv2.waitKey(0)
 
     # Definieren der Koordinaten des Ausschnitts
     x, y, w, h = 19, 90, 527, 390     # x und y Koordinaten vom Eckpunkt oben links des Bildes + width + height (durch Paint leicht bestimmbar)
 
     # Ausschneiden des Bildes
-    cropped_img = start[y:y+h, x:x+w]
+    cropped_img = rota[y:y+h, x:x+w]
     #cv2.imshow("Cropped Image", cropped_img)
     #cv2.waitKey(0)
 
-    # Bild Rotieren um 180°
-    #rota = cv2.rotate(cropped_img, cv2.ROTATE_180)   (!!! Beispielbild musste nicht rotiert werden!!!)
-    #cv2.imshow("rotiertes bild", rota)
-    #cv2.waitKey(0)
+    
 
     # Konvertieren des Bildes in Graustufen
     gray = cv2.cvtColor(cropped_img, cv2.COLOR_BGR2GRAY)
