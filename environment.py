@@ -161,4 +161,5 @@ class Environment:
 
     def segment_image(self):
         self.segmented_image = segmentation.flood_fill(self.segmented_image, (0, 0), 3, connectivity=1)
+        #self.segmented_image = segmentation.flood_fill(self.segmented_image, (260, 0), 4, connectivity=1)
         self.segmented_image = segmentation.flood_fill(self.segmented_image, (511, 511), 4, connectivity=1)
