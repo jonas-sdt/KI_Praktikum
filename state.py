@@ -51,7 +51,7 @@ class State:
             return False
 
     # Added, because we want to save only the matrix hash in the q table and not the instance itself
-    def get_hash(self):
+    def get_string_representation(self):
         return np.array_str(self.matrix)
 
     def __str__(self):

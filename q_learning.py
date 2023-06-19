@@ -56,8 +56,8 @@ class QValueAlgorithm:
         This method returns the action with the highest Q-value for the given state
         :param state:
         """
-        max_q_value = np.max(self.q_values[state.get_hash()])
-        max_q_value_indicex = np.where(self.q_values[state.get_hash()] == max_q_value)[0]
+        max_q_value = np.max(self.q_values[state.get_string_representation()])
+        max_q_value_indicex = np.where(self.q_values[state.get_string_representation()] == max_q_value)[0]
         return self.action_list[max_q_value_indicex[0]]
 
     def get_reward(self, environment, is_out_of_bounds=False):
@@ -95,18 +95,20 @@ class QValueAlgorithm:
         :param action:
         :param reward:
         """
-        if state.get_hash() not in self.q_values:
-            self.q_values[state.get_hash()] = np.zeros(len(self.action_list))
+        if state.get_string_representation() not in self.q_values:
+            self.q_values[state.get_string_representation()] = np.zeros(len(self.action_list))
 
-        if state_new.get_hash() not in self.q_values:
-            self.q_values[state_new.get_hash()] = np.zeros(len(self.action_list))
+        if state_new.get_string_representation() not in self.q_values:
+            self.q_values[state_new.get_string_representation()] = np.zeros(len(self.action_list))
 
-        self.q_values[state.get_hash()][self.action_list.index(action)] = (1 - self.alpha) * \
-                                                                          self.q_values[state.get_hash()][
+        self.q_values[state.get_string_representation()][self.action_list.index(action)] = (1 - self.alpha) * \
+                                                                                           self.q_values[
+                                                                                               state.get_string_representation()][
                                                                               self.action_list.index(
                                                                                   action)] + self.alpha * (
                                                                                       reward + self.gamma * np.max(
-                                                                                  self.q_values[state_new.get_hash()]))
+                                                                                  self.q_values[
+                                                                                      state_new.get_string_representation()]))
 
     def learn_exec(self, image, last_row=256, last_col=511):
         """

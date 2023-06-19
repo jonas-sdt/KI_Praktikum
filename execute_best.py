@@ -63,13 +63,14 @@ class ExecuteBest:
 
         # Show the image
         cv2.imshow("image", self.image)
-        cv2.waitKey(0)
+
+        return self.all_actions
 
     def get_best_action(self, state):
         """
         This method returns the action with the highest Q-value for the given state
         :param state:
         """
-        max_q_value = np.max(self.q_values[state.get_hash()])
-        max_q_value_indicex = np.where(self.q_values[state.get_hash()] == max_q_value)[0]
+        max_q_value = np.max(self.q_values[state.get_string_representation()])
+        max_q_value_indicex = np.where(self.q_values[state.get_string_representation()] == max_q_value)[0]
         return self.action_list[max_q_value_indicex[0]]
