@@ -21,7 +21,7 @@ class QValueAlgorithm:
         self.alpha = 0.3
         self.gamma = 0.9
         self.action_list = list(Action)
-        self.episodes = 5
+        self.episodes = 10
         self.action_number = 0
         self.no_collision = True
         self.train_real = False
@@ -104,11 +104,11 @@ class QValueAlgorithm:
         self.q_values[state.get_string_representation()][self.action_list.index(action)] = (1 - self.alpha) * \
                                                                                            self.q_values[
                                                                                                state.get_string_representation()][
-                                                                              self.action_list.index(
-                                                                                  action)] + self.alpha * (
-                                                                                      reward + self.gamma * np.max(
-                                                                                  self.q_values[
-                                                                                      state_new.get_string_representation()]))
+                                                                                               self.action_list.index(
+                                                                                                   action)] + self.alpha * (
+                                                                                                   reward + self.gamma * np.max(
+                                                                                               self.q_values[
+                                                                                                   state_new.get_string_representation()]))
 
     def learn_exec(self, image, last_row=256, last_col=511):
         """
